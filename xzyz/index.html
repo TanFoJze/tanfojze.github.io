@@ -2,7 +2,7 @@
 <html lang="zh">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title> 🅃ɑׁn𝔽𝕠𝒥𝓏e🐦 [听说你很喜欢现榨椰汁] </title>
     <style>
         * {
@@ -14,6 +14,8 @@
             height: 100%;
             background: #252525;
             overflow: hidden;
+            overscroll-behavior: none;
+            touch-action: none;
         }
         body {
             display: flex;
@@ -27,6 +29,7 @@
             height: auto;
             display: block;
             flex-shrink: 0;
+            pointer-events: none;
         }
     </style>
 </head>
