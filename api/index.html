@@ -12,10 +12,19 @@
             var apiTimeData = 'NULL';
             var weatherData = 'NULL';
 
-            var encodedId = 'MTAwMTk0NDc=';
-            var encodedKey = 'YzM0NjRiNzgzM2JlMzdiOTFmMzI2ZWRmYzIxNGFiZTU=';
-            var id = atob(encodedId);
-            var key = atob(encodedKey);
+            function decrypt(hex) {
+                var result = '';
+                for (var i = 0; i < hex.length; i += 2) {
+                    var byte = parseInt(hex.substr(i, 2), 16) - 10;
+                    result += String.fromCharCode(byte);
+                }
+                return result;
+            }
+
+            var encId = '3B3A3A3B433E3E41';
+            var encKey = '6D3D3E403E6C41423D3D6C6F3D416C433B703D3C406F6E706D3C3B3E6B6C6F3F';
+            var id = decrypt(encId);
+            var key = decrypt(encKey);
 
             function updateLocalTime() {
                 var now = new Date();
@@ -80,7 +89,7 @@
             updateLocalTime();
             setInterval(updateLocalTime, 20);
             fetchApiTime();
-            setInterval(fetchApiTime, 30000);
+            setInterval(fetchApiTime, 6000);
             fetchWeather();
             setInterval(fetchWeather, 10 * 60 * 1000);
             document.addEventListener('visibilitychange', function() {
