@@ -9,9 +9,15 @@
     <script>
         (function() {
             var output = document.getElementById('output');
+            var apiTimeData = 'NULL';
             var weatherData = 'NULL';
 
-            function updateTime() {
+            var encodedId = 'MTAwMTk0NDc=';
+            var encodedKey = 'YzM0NjRiNzgzM2JlMzdiOTFmMzI2ZWRmYzIxNGFiZTU=';
+            var id = atob(encodedId);
+            var key = atob(encodedKey);
+
+            function updateLocalTime() {
                 var now = new Date();
                 var year = now.getFullYear();
                 var month = String(now.getMonth() + 1).padStart(2, '0');
@@ -21,11 +27,36 @@
                 var secs = String(now.getSeconds()).padStart(2, '0');
                 var ms = String(now.getMilliseconds()).padStart(3, '0');
                 var timeStr = year + '-' + month + '-' + day + ' ' + hours + ':' + mins + ':' + secs + '.' + ms;
-                output.textContent = '{"时间":"' + timeStr + '","天气":"' + weatherData + '"}';
+                render(timeStr, apiTimeData, weatherData);
+            }
+
+            function render(localTime, apiTime, weather) {
+                output.textContent = '{"本机时间":"' + localTime + '","当前时间":"' + apiTime + '","天气":"' + weather + '"}';
+            }
+
+            function fetchApiTime() {
+                var url = 'https://cn.apihz.cn/api/time/getapi.php?id=' + encodeURIComponent(id) + '&key=' + encodeURIComponent(key) + '&type=2';
+                fetch(url)
+                .then(function(response) {
+                    if (!response.ok) throw new Error('HTTP ' + response.status);
+                    return response.json();
+                })
+                .then(function(data) {
+                    if (data.code === 200) {
+                        apiTimeData = data.msg;
+                    } else {
+                        apiTimeData = 'NULL';
+                    }
+                    updateLocalTime();
+                })
+                .catch(function() {
+                    apiTimeData = 'NULL';
+                    updateLocalTime();
+                });
             }
 
             function fetchWeather() {
-                var url = 'https://zh.wttr.in/?format=%l:+%c+%t+%w&_=' + Date.now();
+                var url = 'https://zh.wttr.in/北京?format=%l:+%c+%t+%w&_=' + Date.now();
                 fetch(url, { method: 'GET', headers: { 'Accept': 'text/plain' } })
                 .then(function(response) {
                     if (!response.ok) throw new Error();
@@ -38,21 +69,24 @@
                     } else {
                         weatherData = 'NULL';
                     }
-                    updateTime();
+                    updateLocalTime();
                 })
                 .catch(function() {
                     weatherData = 'NULL';
-                    updateTime();
+                    updateLocalTime();
                 });
             }
 
-            updateTime();
-            setInterval(updateTime, 20);
+            updateLocalTime();
+            setInterval(updateLocalTime, 20);
+            fetchApiTime();
+            setInterval(fetchApiTime, 30000);
             fetchWeather();
             setInterval(fetchWeather, 10 * 60 * 1000);
             document.addEventListener('visibilitychange', function() {
                 if (!document.hidden) {
                     fetchWeather();
+                    fetchApiTime();
                 }
             });
         })();
