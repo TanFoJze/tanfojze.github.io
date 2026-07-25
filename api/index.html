@@ -11,17 +11,16 @@
             var output = document.getElementById('output');
 
             function decrypt(hex) {
-                var cleaned = hex.replace(/[\u200B-\u200D\uFEFF]/g, '');
                 var result = '';
-                for (var i = 0; i < cleaned.length; i += 2) {
-                    var byte = parseInt(cleaned.substr(i, 2), 16) - 10;
+                for (var i = 0; i < hex.length; i += 2) {
+                    var byte = parseInt(hex.substr(i, 2), 16) - 10;
                     result += String.fromCharCode(byte);
                 }
                 return result;
             }
 
-            var encId = '\u200B3B3A3A3B433E3E41';
-            var encKey = '\u200B6D3D3E403E6C41423D3D6C6F3D416C433B703D3C406F6E706D3C3B3E6B6C6F3F';
+            var encId = '3B3A3A3B433E3E41';
+            var encKey = '6D3D3E403E6C41423D3D6C6F3D416C433B703D3C406F6E706D3C3B3E6B6C6F3F';
             var id = decrypt(encId);
             var key = decrypt(encKey);
 
