@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <title>TFJtime</title>
+</head>
+<body>
+    <div id="output"></div>
+    <script>
+        (function() {
+            var output = document.getElementById('output');
+            var weatherData = 'NULL';
+
+            function updateTime() {
+                var now = new Date();
+                var year = now.getFullYear();
+                var month = String(now.getMonth() + 1).padStart(2, '0');
+                var day = String(now.getDate()).padStart(2, '0');
+                var hours = String(now.getHours()).padStart(2, '0');
+                var mins = String(now.getMinutes()).padStart(2, '0');
+                var secs = String(now.getSeconds()).padStart(2, '0');
+                var ms = String(now.getMilliseconds()).padStart(3, '0');
+                var timeStr = year + '-' + month + '-' + day + ' ' + hours + ':' + mins + ':' + secs + '.' + ms;
+                output.textContent = '{"时间":"' + timeStr + '","天气":"' + weatherData + '"}';
+            }
+
+            function fetchWeather() {
+                var url = 'https://zh.wttr.in/?format=%l:+%c+%t+%w&_=' + Date.now();
+                fetch(url, { method: 'GET', headers: { 'Accept': 'text/plain' } })
+                .then(function(response) {
+                    if (!response.ok) throw new Error();
+                    return response.text();
+                })
+                .then(function(text) {
+                    var trimmed = text.trim();
+                    if (trimmed.length > 0) {
+                        weatherData = trimmed;
+                    } else {
+                        weatherData = 'NULL';
+                    }
+                    updateTime();
+                })
+                .catch(function() {
+                    weatherData = 'NULL';
+                    updateTime();
+                });
+            }
+
+            updateTime();
+            setInterval(updateTime, 20);
+            fetchWeather();
+            setInterval(fetchWeather, 10 * 60 * 1000);
+            document.addEventListener('visibilitychange', function() {
+                if (!document.hidden) {
+                    fetchWeather();
+                }
+            });
+        })();
+    </script>
+</body>
+</html>
