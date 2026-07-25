@@ -9,7 +9,6 @@
     <script>
         (function() {
             var output = document.getElementById('output');
-            var weatherData = 'NULL';
 
             function decrypt(hex) {
                 var cleaned = hex.replace(/[\u200B-\u200D\uFEFF]/g, '');
@@ -29,8 +28,8 @@
             var apiBaseMs = null;
             var apiTimer = null;
 
-            function render(localTimeStr, apiTimeStr, weatherStr) {
-                output.textContent = '{"本机时间":"' + localTimeStr + '","当前时间":"' + apiTimeStr + '","天气":"' + weatherStr + '"}';
+            function render(localTimeStr, apiTimeStr) {
+                output.textContent = '{"本机时间":"' + localTimeStr + '","当前时间":"' + apiTimeStr + '"}';
             }
 
             function getLocalTimeStr() {
@@ -61,7 +60,7 @@
             function updateDisplay() {
                 var localStr = getLocalTimeStr();
                 var apiStr = (apiBaseMs !== null) ? getApiTimeStr() : 'NULL';
-                render(localStr, apiStr, weatherData);
+                render(localStr, apiStr);
             }
 
             function startApiTimer() {
@@ -112,25 +111,7 @@
                 });
             }
 
-            function fetchWeather() {
-                var url = 'https://zh.wttr.in/北京?format=%l:+%c+%t+%w&_=' + Date.now();
-                fetch(url, { headers: { 'Accept': 'text/plain' } })
-                .then(function(response) {
-                    if (!response.ok) throw new Error();
-                    return response.text();
-                })
-                .then(function(text) {
-                    weatherData = text.trim() || 'NULL';
-                    updateDisplay();
-                })
-                .catch(function() {
-                    weatherData = 'NULL';
-                    updateDisplay();
-                });
-            }
-
             fetchApiTime();
-            fetchWeather();
             setInterval(updateDisplay, 20);
 
             document.addEventListener('visibilitychange', function() {
