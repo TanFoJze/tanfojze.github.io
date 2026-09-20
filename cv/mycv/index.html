@@ -2,16 +2,18 @@
 <html lang="zh">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no,viewport-fit=cover">
 <title>CV-智控2</title>
 <style>
   html,body{margin:0;height:100%;overflow:hidden;background:#0e0e10;
-    font:13px/1.6 system-ui,-apple-system,sans-serif;color:#8b93a0}
-  #stage{position:fixed;inset:0;overflow:hidden;touch-action:none;cursor:grab}
+    font:13px/1.6 system-ui,-apple-system,sans-serif;color:#8b93a0;
+    -webkit-tap-highlight-color:transparent}
+  #stage{position:fixed;inset:0;overflow:hidden;touch-action:none;
+    cursor:grab;user-select:none;-webkit-user-select:none}
   #stage.dragging{cursor:grabbing}
   #img{position:absolute;left:0;top:0;transform-origin:0 0;opacity:0;
     transition:opacity .35s ease;user-select:none;-webkit-user-drag:none;
-    will-change:transform;pointer-events:none}
+    will-change:transform;pointer-events:none;max-width:none;max-height:none}
   #img.show{opacity:1}
   #bar{position:fixed;left:0;top:0;height:2px;width:0;background:#3d9bff;
     z-index:9;transition:width .15s linear;box-shadow:0 0 8px #3d9bff}
@@ -25,10 +27,10 @@
 <body>
 <div id="bar"></div>
 <div id="stage"><img id="img" alt="CV-智控2"></div>
-<div id="hint">滚轮 / 双指缩放 · 拖动平移 · 双击切换 1:1</div>
+<div id="hint">双指缩放 · 拖动平移 · 双击切换 1:1</div>
 
 <script>
-const SRC = '1789909109576.png';
+const SRC = 'cvimg.jpg';
 const stage = document.getElementById('stage'),
       img   = document.getElementById('img'),
       bar   = document.getElementById('bar'),
@@ -37,9 +39,9 @@ const stage = document.getElementById('stage'),
 let scale = 1, tx = 0, ty = 0, fitScale = 1;
 const MIN = 0.05, MAX = 24;
 
-const apply = () => {
-  img.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
-};
+function apply() {
+  img.style.transform = 'translate(' + tx + 'px,' + ty + 'px) scale(' + scale + ')';
+}
 
 function fit() {
   const bw = stage.clientWidth, bh = stage.clientHeight;
@@ -94,8 +96,19 @@ function zoomAt(cx, cy, f) {
 const pts = new Map();
 let drag = null, pinch = null;
 
+function mid() {
+  const a = [...pts.values()];
+  return { x: (a[0].x + a[1].x) / 2, y: (a[0].y + a[1].y) / 2 };
+}
+
+function dist() {
+  const a = [...pts.values()];
+  return Math.hypot(a[0].x - a[1].x, a[0].y - a[1].y);
+}
+
 stage.addEventListener('pointerdown', e => {
-  stage.setPointerCapture(e.pointerId);
+  if (e.pointerType === 'mouse' && e.button !== 0) return;
+  try { stage.setPointerCapture(e.pointerId); } catch (err) {}
   pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
   if (pts.size === 1) {
@@ -103,13 +116,12 @@ stage.addEventListener('pointerdown', e => {
     stage.classList.add('dragging');
   } else if (pts.size === 2) {
     drag = null;
-    const [a, b] = [...pts.values()];
-    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const m = mid();
     pinch = {
-      d: Math.hypot(a.x - b.x, a.y - b.y),
+      d: dist(),
       s: scale,
-      ix: (mx - tx) / scale,
-      iy: (my - ty) / scale
+      ix: (m.x - tx) / scale,
+      iy: (m.y - ty) / scale
     };
   }
 });
@@ -118,14 +130,13 @@ stage.addEventListener('pointermove', e => {
   if (!pts.has(e.pointerId)) return;
   pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
 
-  if (pinch && pts.size === 2) {
-    const [a, b] = [...pts.values()];
-    const d = Math.hypot(a.x - b.x, a.y - b.y);
+  if (pts.size >= 2 && pinch) {
+    const d = dist();
     if (!pinch.d) return;
-    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    const m = mid();
     scale = Math.min(Math.max(pinch.s * d / pinch.d, MIN), MAX);
-    tx = mx - pinch.ix * scale;
-    ty = my - pinch.iy * scale;
+    tx = m.x - pinch.ix * scale;
+    ty = m.y - pinch.iy * scale;
     apply();
   } else if (drag) {
     tx = e.clientX - drag.x;
@@ -134,17 +145,20 @@ stage.addEventListener('pointermove', e => {
   }
 });
 
-const lift = e => {
+function lift(e) {
   pts.delete(e.pointerId);
   if (pts.size < 2) pinch = null;
   if (pts.size === 1) {
     const p = [...pts.values()][0];
     drag = { x: p.x - tx, y: p.y - ty };
+  } else if (pts.size === 0) {
+    drag = null;
+    stage.classList.remove('dragging');
   }
-  if (!pts.size) { drag = null; stage.classList.remove('dragging'); }
-};
+}
 stage.addEventListener('pointerup', lift);
 stage.addEventListener('pointercancel', lift);
+stage.addEventListener('pointerleave', e => { if (e.pointerType === 'mouse') lift(e); });
 
 stage.addEventListener('wheel', e => {
   e.preventDefault();
@@ -153,6 +167,7 @@ stage.addEventListener('wheel', e => {
 
 let lastTap = 0;
 stage.addEventListener('pointerup', e => {
+  if (pts.size > 0) return;
   const now = Date.now();
   if (now - lastTap < 300) {
     lastTap = 0;
@@ -164,12 +179,19 @@ stage.addEventListener('pointerup', e => {
     } else {
       fit();
     }
-  } else lastTap = now;
+  } else {
+    lastTap = now;
+  }
 });
+
+document.addEventListener('gesturestart', e => e.preventDefault());
+document.addEventListener('gesturechange', e => e.preventDefault());
+document.addEventListener('dblclick', e => e.preventDefault());
 
 addEventListener('resize', () => {
   if (Math.abs(scale - fitScale) < 0.02) fit();
 });
+addEventListener('orientationchange', () => setTimeout(fit, 200));
 </script>
 </body>
 </html>
