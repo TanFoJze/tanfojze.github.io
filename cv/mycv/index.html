@@ -1,1 +1,175 @@
-<!doctype html><title>CV-智控2</title><img src=1789909109576.png style="position:fixed;inset:0;margin:auto">
+<!doctype html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,user-scalable=no">
+<title>CV-智控2</title>
+<style>
+  html,body{margin:0;height:100%;overflow:hidden;background:#0e0e10;
+    font:13px/1.6 system-ui,-apple-system,sans-serif;color:#8b93a0}
+  #stage{position:fixed;inset:0;overflow:hidden;touch-action:none;cursor:grab}
+  #stage.dragging{cursor:grabbing}
+  #img{position:absolute;left:0;top:0;transform-origin:0 0;opacity:0;
+    transition:opacity .35s ease;user-select:none;-webkit-user-drag:none;
+    will-change:transform;pointer-events:none}
+  #img.show{opacity:1}
+  #bar{position:fixed;left:0;top:0;height:2px;width:0;background:#3d9bff;
+    z-index:9;transition:width .15s linear;box-shadow:0 0 8px #3d9bff}
+  #hint{position:fixed;left:50%;bottom:18px;transform:translateX(-50%);
+    padding:6px 14px;border-radius:99px;background:#000000aa;
+    backdrop-filter:blur(6px);pointer-events:none;opacity:0;
+    transition:opacity .3s;white-space:nowrap}
+  #hint.show{opacity:1}
+</style>
+</head>
+<body>
+<div id="bar"></div>
+<div id="stage"><img id="img" alt="CV-智控2"></div>
+<div id="hint">滚轮 / 双指缩放 · 拖动平移 · 双击切换 1:1</div>
+
+<script>
+const SRC = '1789909109576.png';
+const stage = document.getElementById('stage'),
+      img   = document.getElementById('img'),
+      bar   = document.getElementById('bar'),
+      hint  = document.getElementById('hint');
+
+let scale = 1, tx = 0, ty = 0, fitScale = 1;
+const MIN = 0.05, MAX = 24;
+
+const apply = () => {
+  img.style.transform = `translate(${tx}px,${ty}px) scale(${scale})`;
+};
+
+function fit() {
+  const bw = stage.clientWidth, bh = stage.clientHeight;
+  const iw = img.naturalWidth, ih = img.naturalHeight;
+  if (!iw || !ih) return;
+  fitScale = Math.min(bw / iw, bh / ih);
+  scale = fitScale;
+  tx = (bw - iw * scale) / 2;
+  ty = (bh - ih * scale) / 2;
+  apply();
+}
+
+(async () => {
+  let url = SRC;
+  try {
+    const res = await fetch(SRC);
+    if (!res.ok || !res.body) throw 0;
+    const total = +res.headers.get('content-length') || 0;
+    const reader = res.body.getReader();
+    const chunks = [];
+    let got = 0;
+    for (;;) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      chunks.push(value);
+      got += value.length;
+      if (total) bar.style.width = (got / total * 100) + '%';
+    }
+    url = URL.createObjectURL(new Blob(chunks));
+  } catch (e) {}
+
+  img.src = url;
+  try { await img.decode(); } catch (e) {}
+  bar.style.width = '100%';
+  setTimeout(() => bar.remove(), 400);
+
+  fit();
+  img.classList.add('show');
+  setTimeout(() => hint.classList.add('show'), 300);
+  setTimeout(() => hint.classList.remove('show'), 4500);
+})();
+
+function zoomAt(cx, cy, f) {
+  const ns = Math.min(Math.max(scale * f, MIN), MAX);
+  const r = ns / scale;
+  tx = cx - (cx - tx) * r;
+  ty = cy - (cy - ty) * r;
+  scale = ns;
+  apply();
+}
+
+const pts = new Map();
+let drag = null, pinch = null;
+
+stage.addEventListener('pointerdown', e => {
+  stage.setPointerCapture(e.pointerId);
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pts.size === 1) {
+    drag = { x: e.clientX - tx, y: e.clientY - ty };
+    stage.classList.add('dragging');
+  } else if (pts.size === 2) {
+    drag = null;
+    const [a, b] = [...pts.values()];
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    pinch = {
+      d: Math.hypot(a.x - b.x, a.y - b.y),
+      s: scale,
+      ix: (mx - tx) / scale,
+      iy: (my - ty) / scale
+    };
+  }
+});
+
+stage.addEventListener('pointermove', e => {
+  if (!pts.has(e.pointerId)) return;
+  pts.set(e.pointerId, { x: e.clientX, y: e.clientY });
+
+  if (pinch && pts.size === 2) {
+    const [a, b] = [...pts.values()];
+    const d = Math.hypot(a.x - b.x, a.y - b.y);
+    if (!pinch.d) return;
+    const mx = (a.x + b.x) / 2, my = (a.y + b.y) / 2;
+    scale = Math.min(Math.max(pinch.s * d / pinch.d, MIN), MAX);
+    tx = mx - pinch.ix * scale;
+    ty = my - pinch.iy * scale;
+    apply();
+  } else if (drag) {
+    tx = e.clientX - drag.x;
+    ty = e.clientY - drag.y;
+    apply();
+  }
+});
+
+const lift = e => {
+  pts.delete(e.pointerId);
+  if (pts.size < 2) pinch = null;
+  if (pts.size === 1) {
+    const p = [...pts.values()][0];
+    drag = { x: p.x - tx, y: p.y - ty };
+  }
+  if (!pts.size) { drag = null; stage.classList.remove('dragging'); }
+};
+stage.addEventListener('pointerup', lift);
+stage.addEventListener('pointercancel', lift);
+
+stage.addEventListener('wheel', e => {
+  e.preventDefault();
+  zoomAt(e.clientX, e.clientY, e.deltaY < 0 ? 1.15 : 1 / 1.15);
+}, { passive: false });
+
+let lastTap = 0;
+stage.addEventListener('pointerup', e => {
+  const now = Date.now();
+  if (now - lastTap < 300) {
+    lastTap = 0;
+    if (Math.abs(scale - fitScale) < 0.02) {
+      scale = 1;
+      tx = (stage.clientWidth - img.naturalWidth) / 2;
+      ty = (stage.clientHeight - img.naturalHeight) / 2;
+      apply();
+    } else {
+      fit();
+    }
+  } else lastTap = now;
+});
+
+addEventListener('resize', () => {
+  if (Math.abs(scale - fitScale) < 0.02) fit();
+});
+</script>
+</body>
+</html>
