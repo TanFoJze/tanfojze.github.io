@@ -15,7 +15,9 @@
     "flagRed": "#de2910",
     "flagYellow": "#ffde00"
   },
+  "background_low_url": "./profilebg.png",
   "background_image_url": "https://pic1.imgdb.cn/i/0353zgfn8WpDXgXGV3vlli.png",
+  "avatar_low_url": "./favicon.png",
   "avatar_image_url": "https://pic1.imgdb.cn/i/03542NJpHIA8nHuYGipVeU.png",
   "display_name": "🅃aׁׅ֮n𝔽𝕠𝒥𝓏e🐦",
   "handle": "@TanFoJze",
