@@ -5,6 +5,21 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Profile</title>
   <meta name="color-scheme" content="dark">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <script>
+    (function () {
+      var blocked = false;
+      try {
+        blocked = window.top !== window.self && window.top.location.host !== window.location.host;
+      } catch (e) {
+        blocked = true;
+      }
+      if (blocked) {
+        document.documentElement.style.visibility = 'hidden';
+        document.documentElement.style.background = '#04070a';
+      }
+    })();
+  </script>
   <meta name="theme-color" content="#04070a">
   <link rel="icon" type="image/png" href="./favicon.png">
   <link rel="apple-touch-icon" href="./apple-touch-icon.png">
@@ -130,6 +145,204 @@
 
     .fullscreen-btn:active {
       transform: scale(0.92);
+    }
+
+
+    .toolbar {
+      margin-left: auto;
+      display: flex;
+      align-items: center;
+      gap: clamp(3px, 0.9vw, 5px);
+      align-self: center;
+      flex-shrink: 0;
+      flex-wrap: nowrap;
+    }
+
+    .tool-btn {
+      width: clamp(11px, 3.3vw, 14px);
+      height: clamp(11px, 3.3vw, 14px);
+      flex-shrink: 0;
+      padding: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      position: relative;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: color 0.2s ease, transform 0.15s ease, opacity 0.2s ease;
+    }
+
+    .tool-btn::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -3px;
+      right: -3px;
+      bottom: -10px;
+    }
+
+    .user-meta .tool-btn svg {
+      width: 100%;
+      height: 100%;
+      fill: currentColor;
+      display: block;
+      margin: 0;
+    }
+
+    .tool-btn:hover {
+      color: var(--color-text);
+    }
+
+    .tool-btn:active {
+      transform: scale(0.86);
+    }
+
+    .tool-btn.on {
+      color: var(--color-text);
+    }
+
+    .profile-banner-wrap::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 3;
+      opacity: 0;
+      background-color: transparent;
+      transition: opacity 0.45s ease, background-color 0.45s ease;
+    }
+
+    html.weather-bg-rain .profile-banner-wrap::after {
+      opacity: 1;
+      background-color: rgba(9, 21, 18, 0.4);
+    }
+
+    html.weather-bg-snow .profile-banner-wrap::after {
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.26);
+    }
+
+    html.day.weather-bg-rain .profile-banner-wrap::after {
+      background-color: rgba(9, 21, 18, 0.22);
+    }
+
+    html.day.weather-bg-snow .profile-banner-wrap::after {
+      background-color: rgba(0, 0, 0, 0.14);
+    }
+
+    #weather-bg {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 350;
+      opacity: 0;
+      background-color: transparent;
+      transition: opacity 0.45s ease, background-color 0.45s ease;
+    }
+
+    html.weather-rain body::after {
+      opacity: 1;
+      background-color: rgba(9, 20, 17, 0.3);
+    }
+
+    html.weather-snow body::after {
+      opacity: 1;
+      background-color: rgba(0, 0, 0, 0.16);
+    }
+
+    html.day.weather-rain body::after {
+      background-color: rgba(9, 20, 17, 0.16);
+    }
+
+    html.day.weather-snow body::after {
+      background-color: rgba(0, 0, 0, 0.07);
+    }
+
+    #weather {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 300;
+    }
+
+    html.glass body {
+      background-image: var(--glass-image, none);
+      background-size: cover;
+      background-position: center;
+      background-attachment: fixed;
+    }
+
+    html.glass body::before {
+      content: '';
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(4, 7, 10, 0.6);
+      backdrop-filter: blur(26px) saturate(140%);
+      -webkit-backdrop-filter: blur(26px) saturate(140%);
+      z-index: 0;
+      pointer-events: none;
+    }
+
+    html.day.glass body::before {
+      background: rgba(238, 245, 250, 0.55);
+    }
+
+    html.glass .app-container {
+      position: relative;
+      z-index: 1;
+      background: rgba(255, 255, 255, 0.055);
+      backdrop-filter: blur(16px) saturate(150%);
+      -webkit-backdrop-filter: blur(16px) saturate(150%);
+      border-left-color: rgba(255, 255, 255, 0.14);
+      border-right-color: rgba(255, 255, 255, 0.14);
+    }
+
+    html.day.glass .app-container {
+      background: rgba(255, 255, 255, 0.42);
+      border-left-color: rgba(0, 0, 0, 0.08);
+      border-right-color: rgba(0, 0, 0, 0.08);
+    }
+
+    html.glass .profile-section,
+    html.glass .tabs,
+    html.glass .feed,
+    html.glass .btn-outline {
+      background-color: rgba(255, 255, 255, 0.03);
+    }
+
+    html.day.glass .profile-section,
+    html.day.glass .tabs,
+    html.day.glass .feed,
+    html.day.glass .btn-outline {
+      background-color: rgba(255, 255, 255, 0.35);
     }
 
     .toast {
@@ -393,6 +606,69 @@
       white-space: pre-wrap;
     }
 
+    .bio-toggle {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 15px;
+      height: 15px;
+      padding: 0;
+      margin-left: 3px;
+      vertical-align: -3px;
+      background: none;
+      border: none;
+      color: var(--color-text-muted);
+      cursor: pointer;
+      position: relative;
+      -webkit-appearance: none;
+      appearance: none;
+      -webkit-tap-highlight-color: transparent;
+      transition: transform 0.25s ease, color 0.2s ease;
+    }
+
+    .bio-toggle::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: -8px;
+      right: -8px;
+      bottom: -10px;
+    }
+
+    .bio-toggle svg {
+      width: 100%;
+      height: 100%;
+      fill: none;
+      stroke: currentColor;
+      stroke-width: 2.8;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      display: block;
+    }
+
+    .bio-toggle:hover {
+      color: var(--color-text);
+    }
+
+    .bio-expanded .bio-toggle {
+      transform: rotate(180deg);
+    }
+
+    .bio-more {
+      font-size: 15px;
+      line-height: 1.5;
+      color: var(--color-text);
+      white-space: pre-wrap;
+      margin-top: 6px;
+      margin-bottom: 9px;
+      display: none;
+    }
+
+    .bio-more.show {
+      display: block;
+    }
+
+
     .user-meta {
       display: flex;
       flex-direction: column;
@@ -567,6 +843,7 @@
 
     <div class="profile-banner-wrap">
       <div class="profile-banner" id="profile-banner"></div>
+      <canvas id="weather-bg"></canvas>
     </div>
 
     <section class="profile-section">
@@ -586,7 +863,8 @@
       <div class="user-name" id="display-name">加载中...</div>
       <div class="user-handle" id="user-handle"></div>
 
-      <div class="user-bio" id="profile-bio"></div>
+      <div class="user-bio" id="user-bio-wrap"><span id="profile-bio"></span><button class="bio-toggle" id="bio-toggle" type="button" aria-label="展开简介" aria-expanded="false"><svg viewBox="0 0 24 24" data-group="ui" data-svg="chevronDown"></svg></button></div>
+      <div class="bio-more" id="profile-bio-more"></div>
 
       <div class="user-meta" id="profile-meta">
         <span id="meta-link-container" style="display: none;">
@@ -604,6 +882,22 @@
             <span id="meta-join"></span>
             <svg viewBox="0 0 24 24" style="width:14px; height:14px; margin-left:2px;" data-group="ui" data-svg="chevronRight"></svg>
           </span>
+
+          <button class="tool-btn" id="btn-music" type="button" aria-label="暂停音乐">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="musicOn"></svg>
+          </button>
+          <button class="tool-btn" id="btn-replay" type="button" aria-label="重新播放">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="replay"></svg>
+          </button>
+          <button class="tool-btn" id="btn-weather" type="button" aria-label="天气效果">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="rain"></svg>
+          </button>
+          <button class="tool-btn" id="btn-theme" type="button" aria-label="白天/夜晚">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="moon"></svg>
+          </button>
+          <button class="tool-btn" id="btn-glass" type="button" aria-label="玻璃效果">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="glass"></svg>
+          </button>
         </div>
       </div>
 
@@ -669,20 +963,64 @@
 
   <div class="toast" id="toast"></div>
 
+  <canvas id="weather"></canvas>
+
+  <audio id="bgm" loop preload="auto"></audio>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
+
+      const canvasMain = document.getElementById('weather');
+      const canvasBg = document.getElementById('weather-bg');
+      const ctxMain = canvasMain ? canvasMain.getContext('2d') : null;
+      const ctxBg = canvasBg ? canvasBg.getContext('2d') : null;
+
+      const safePath = (d) => (typeof d === 'string' && /^[MmZzLlHhVvCcSsQqTtAa0-9.,\s+-]+$/.test(d)) ? d : '';
+
+      const safeUrl = (u) => (typeof u === 'string' && /^(https?:\/\/|mailto:)/i.test(u.trim())) ? u.trim() : '';
+
+      const safeCssUrl = (u) => {
+        if (typeof u !== 'string') return '';
+        const v = u.trim();
+        if (!/^(https?:\/\/|\.\/)/i.test(v)) return '';
+        return v.replace(/['"()\\]/g, '');
+      };
+
+      const SVG_NS = 'http://www.w3.org/2000/svg';
+      const SVG_SHAPE_TAGS = { rect: 1, polygon: 1, path: 1, circle: 1, ellipse: 1, g: 1, line: 1 };
+
+      const syncCanvasSize = (c, ctx) => {
+        if (!c || !ctx) return;
+        const rect = c.getBoundingClientRect();
+        const dpr = Math.min(window.devicePixelRatio || 1, 2);
+        const w = Math.max(1, Math.round(rect.width * dpr));
+        const h = Math.max(1, Math.round(rect.height * dpr));
+        if (Math.abs(c.width - w) > 2 || Math.abs(c.height - h) > 2) {
+          c.width = w;
+          c.height = h;
+          ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+        }
+      };
 
       let SVG_DATA = {};
 
       const applySvg = () => {
         document.querySelectorAll('svg[data-svg]').forEach((el) => {
           const group = el.dataset.group || 'ui';
-          const d = SVG_DATA[group] && SVG_DATA[group][el.dataset.svg];
+          const d = safePath(SVG_DATA[group] && SVG_DATA[group][el.dataset.svg]);
           if (d) el.innerHTML = '<path d="' + d + '"/>';
         });
         const flag = document.querySelector('.avatar-flag svg');
-        if (flag && SVG_DATA.flag && SVG_DATA.flag.inner) {
-          flag.innerHTML = SVG_DATA.flag.inner;
+        if (flag && SVG_DATA.flag && Array.isArray(SVG_DATA.flag.shapes)) {
+          flag.innerHTML = '';
+          SVG_DATA.flag.shapes.forEach((shape) => {
+            if (!shape || !SVG_SHAPE_TAGS[shape.tag]) return;
+            const node = document.createElementNS(SVG_NS, shape.tag);
+            Object.keys(shape.attrs || {}).forEach((k) => {
+              if (/^[a-zA-Z-]+$/.test(k)) node.setAttribute(k, String(shape.attrs[k]));
+            });
+            flag.appendChild(node);
+          });
         }
       };
 
@@ -757,7 +1095,7 @@
             a.title = label;
             a.setAttribute('aria-label', label);
           }
-          const d = SVG_DATA.social && SVG_DATA.social[item.key];
+          const d = safePath(SVG_DATA.social && SVG_DATA.social[item.key]);
           if (d) {
             a.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + d + '"/></svg>';
           }
@@ -770,10 +1108,13 @@
                 .then(() => showToast(item.copy))
                 .catch(() => showToast('复制失败'));
             });
-          } else if (item.url) {
-            a.href = item.url;
-            a.rel = 'noopener noreferrer';
-            if (/^https?:/i.test(item.url)) a.target = '_blank';
+          } else {
+            const u = safeUrl(item.url);
+            if (u) {
+              a.href = u;
+              a.rel = 'noopener noreferrer';
+              if (/^https?:/i.test(u)) a.target = '_blank';
+            }
           }
           return a;
         };
@@ -841,10 +1182,27 @@
         }, 1600);
       };
 
-      shareBtn.addEventListener('click', () => {
+      const sharePayload = () => ({
+        title: document.title,
+        text: (data.display_name || '') + ' ' + (data.handle || ''),
+        url: shareUrl
+      });
+
+      const fallbackCopy = () => {
         copyText(shareUrl)
           .then(() => flashShare('已复制', true))
           .catch(() => flashShare('复制失败', false));
+      };
+
+      shareBtn.addEventListener('click', () => {
+        if (navigator.share) {
+          navigator.share(sharePayload()).catch((err) => {
+            if (err && err.name === 'AbortError') return;
+            fallbackCopy();
+          });
+          return;
+        }
+        fallbackCopy();
       });
 
       const fsBtn = document.getElementById('fullscreen-btn');
@@ -915,7 +1273,7 @@
       });
 
       const fsIcon = (key) => {
-        const d = SVG_DATA.ui && SVG_DATA.ui[key];
+        const d = safePath(SVG_DATA.ui && SVG_DATA.ui[key]);
         return d ? '<svg viewBox="0 0 24 24"><path d="' + d + '"/></svg>' : '';
       };
       const updateFsButton = () => {
@@ -962,7 +1320,7 @@
             img.src = data.background_image_url;
             img.onload = () => {
               const showHd = () => {
-                bannerEl.style.setProperty('--banner-src', `url('${data.background_image_url}')`);
+                bannerEl.style.setProperty('--banner-src', `url('${safeCssUrl(data.background_image_url)}')`);
                 bannerEl.classList.add('has-remote');
               };
               if (img.decode) {
@@ -973,6 +1331,245 @@
             };
           }
 
+          if (data.bgm_url) {
+            const bgm = document.getElementById('bgm');
+            if (bgm) {
+              bgm.src = data.bgm_url;
+              bgm.loop = true;
+              bgm.volume = typeof data.bgm_volume === 'number' ? Math.min(1, Math.max(0, data.bgm_volume)) : 0.6;
+
+              const startBgm = () => {
+                const p = bgm.play();
+                if (p && typeof p.then === 'function') {
+                  p.then(() => {
+                    ['touchstart', 'click', 'keydown'].forEach((ev) => {
+                      document.removeEventListener(ev, unlockBgm);
+                    });
+                  }).catch(() => {});
+                }
+              };
+
+              const unlockBgm = () => {
+                startBgm();
+              };
+
+              startBgm();
+              ['touchstart', 'click', 'keydown'].forEach((ev) => {
+                document.addEventListener(ev, unlockBgm, { passive: true });
+              });
+            }
+          }
+
+          const setIcon = (el, key) => {
+            if (!el) return;
+            const svg = el.querySelector('svg');
+            const d = SVG_DATA.ui && SVG_DATA.ui[key];
+            if (svg && d) svg.innerHTML = '<path d="' + d + '"/>';
+          };
+
+          const bgmEl = document.getElementById('bgm');
+          const btnMusic = document.getElementById('btn-music');
+          const btnReplay = document.getElementById('btn-replay');
+          const btnWeather = document.getElementById('btn-weather');
+          const btnTheme = document.getElementById('btn-theme');
+          const btnGlass = document.getElementById('btn-glass');
+
+          btnMusic.addEventListener('click', () => {
+            if (!bgmEl) return;
+            if (bgmEl.paused) {
+              const p = bgmEl.play();
+              if (p && p.catch) p.catch(() => {});
+              setIcon(btnMusic, 'musicOn');
+              showToast('音乐已播放');
+            } else {
+              bgmEl.pause();
+              setIcon(btnMusic, 'musicOff');
+              showToast('音乐已暂停');
+            }
+          });
+
+          btnReplay.addEventListener('click', () => {
+            if (!bgmEl) return;
+            try { bgmEl.currentTime = 0; } catch (e) {}
+            const p = bgmEl.play();
+            if (p && p.catch) p.catch(() => {});
+            setIcon(btnMusic, 'musicOn');
+            showToast('已从头重新播放');
+          });
+
+          const WEATHER_SEQ = ['rain', 'snow', 'none', 'bgRain', 'bgSnow'];
+          let weatherMode = 'rain';
+          let weatherIndex = 0;
+          let particles = [];
+          let rafId = null;
+
+          const isDay = () => document.documentElement.classList.contains('day');
+          const isFull = () => weatherMode === 'rain' || weatherMode === 'snow';
+          const kindOf = () => (weatherMode === 'rain' || weatherMode === 'bgRain') ? 'rain'
+            : (weatherMode === 'snow' || weatherMode === 'bgSnow') ? 'snow' : 'none';
+
+          const activeCanvas = () => (isFull() ? canvasMain : canvasBg);
+          const activeCtx = () => (isFull() ? ctxMain : ctxBg);
+
+          const setupCanvas = (c, ctx) => {
+            if (!c || !ctx) return { W: 0, H: 0 };
+            const rect = c.getBoundingClientRect();
+            const dpr = Math.min(window.devicePixelRatio || 1, 2);
+            const w = Math.max(1, Math.round(rect.width));
+            const h = Math.max(1, Math.round(rect.height));
+            c.width = Math.floor(w * dpr);
+            c.height = Math.floor(h * dpr);
+            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+            return { W: w, H: h };
+          };
+
+          const buildParticles = (W, H) => {
+            particles = [];
+            const kind = kindOf();
+            if (kind === 'rain') {
+              const n = Math.min(220, Math.round(W / 2.2));
+              for (let i = 0; i < n; i++) {
+                particles.push({
+                  x: Math.random() * W, y: Math.random() * H,
+                  len: 8 + Math.random() * 14, spd: 6 + Math.random() * 7,
+                  a: 0.14 + Math.random() * 0.32
+                });
+              }
+            } else if (kind === 'snow') {
+              const n = Math.min(150, Math.round(W / 4.5));
+              for (let i = 0; i < n; i++) {
+                particles.push({
+                  x: Math.random() * W, y: Math.random() * H,
+                  r: 0.7 + Math.random() * 1.7, spd: 0.35 + Math.random() * 0.85,
+                  drift: 0.3 + Math.random() * 0.7, phase: Math.random() * 6.28,
+                  a: 0.35 + Math.random() * 0.5
+                });
+              }
+            }
+          };
+
+          const drawWeather = () => {
+            const c = activeCanvas();
+            const ctx = activeCtx();
+            if (!c || !ctx) { rafId = null; return; }
+            const dprNow = Math.min(window.devicePixelRatio || 1, 2);
+            const W = c.width / dprNow;
+            const H = c.height / dprNow;
+            ctx.clearRect(0, 0, W, H);
+            const kind = kindOf();
+            const col = kind === 'rain'
+              ? (isDay() ? '92,112,104' : '176,198,190')
+              : (isDay() ? '150,165,180' : '235,242,248');
+            for (let i = 0; i < particles.length; i++) {
+              const p = particles[i];
+              if (kind === 'rain') {
+                ctx.strokeStyle = 'rgba(' + col + ',' + p.a + ')';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(p.x, p.y);
+                ctx.lineTo(p.x - 1.4, p.y + p.len);
+                ctx.stroke();
+                p.y += p.spd;
+                p.x -= 0.4;
+                if (p.y > H) { p.y = -p.len; p.x = Math.random() * W; }
+              } else {
+                ctx.fillStyle = 'rgba(' + col + ',' + p.a + ')';
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.r, 0, 6.2832);
+                ctx.fill();
+                p.phase += 0.012;
+                p.y += p.spd;
+                p.x += Math.sin(p.phase) * p.drift;
+                if (p.y > H) { p.y = -4; p.x = Math.random() * W; }
+                if (p.x > W) p.x = -2;
+                if (p.x < -2) p.x = W;
+              }
+            }
+            rafId = requestAnimationFrame(drawWeather);
+          };
+
+          const clearAll = () => {
+            if (ctxMain && canvasMain) ctxMain.clearRect(0, 0, canvasMain.width, canvasMain.height);
+            if (ctxBg && canvasBg) ctxBg.clearRect(0, 0, canvasBg.width, canvasBg.height);
+          };
+
+          const startWeather = () => {
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            clearAll();
+            const root = document.documentElement;
+            ['weather-rain', 'weather-snow', 'weather-bg-rain', 'weather-bg-snow'].forEach((c) => {
+              root.classList.remove(c);
+            });
+            if (weatherMode === 'rain') root.classList.add('weather-rain');
+            else if (weatherMode === 'snow') root.classList.add('weather-snow');
+            else if (weatherMode === 'bgRain') root.classList.add('weather-bg-rain');
+            else if (weatherMode === 'bgSnow') root.classList.add('weather-bg-snow');
+            if (kindOf() === 'none') return;
+            const c = activeCanvas();
+            const ctx = activeCtx();
+            const size = setupCanvas(c, ctx);
+            buildParticles(size.W, size.H);
+            rafId = requestAnimationFrame(drawWeather);
+          };
+
+          const resizeWeather = () => {
+            clearAll();
+            setupCanvas(canvasMain, ctxMain);
+            setupCanvas(canvasBg, ctxBg);
+            const c = activeCanvas();
+            const ctx = activeCtx();
+            if (kindOf() === 'none') return;
+            const size = setupCanvas(c, ctx);
+            buildParticles(size.W, size.H);
+          };
+
+          window.addEventListener('resize', resizeWeather);
+
+          const WEATHER_LABEL = {
+            rain: '全屏下雨',
+            snow: '全屏下雪',
+            none: '无天气效果',
+            bgRain: '背景图下雨',
+            bgSnow: '背景图下雪'
+          };
+
+          btnWeather.addEventListener('click', () => {
+            weatherIndex = (weatherIndex + 1) % WEATHER_SEQ.length;
+            weatherMode = WEATHER_SEQ[weatherIndex];
+            setIcon(btnWeather, weatherMode);
+            btnWeather.classList.toggle('on', weatherMode !== 'none');
+            startWeather();
+            showToast(WEATHER_LABEL[weatherMode] || '');
+          });
+
+          let isNight = true;
+          btnTheme.addEventListener('click', () => {
+            isNight = !isNight;
+            applyTheme(isNight ? data.theme : (data.themeLight || data.theme));
+            setIcon(btnTheme, isNight ? 'moon' : 'sun');
+            document.documentElement.classList.toggle('day', !isNight);
+            showToast(isNight ? '夜晚模式' : '白天模式');
+          });
+
+          btnGlass.addEventListener('click', () => {
+            const on = document.documentElement.classList.toggle('glass');
+            btnGlass.classList.toggle('on', on);
+            showToast(on ? '玻璃效果已开启' : '玻璃效果已关闭');
+          });
+
+          if (window.ResizeObserver) {
+            const ro = new ResizeObserver(() => {
+              syncCanvasSize(canvasBg, ctxBg);
+              syncCanvasSize(canvasMain, ctxMain);
+            });
+            ro.observe(canvasBg);
+            ro.observe(canvasMain);
+          }
+
+          btnWeather.classList.add('on');
+          document.documentElement.style.setProperty('--glass-image', `url('${safeCssUrl(data.background_image_url) || './profilebg.png'}')`);
+          startWeather();
+
           if (data.avatar_image_url) {
             const avatarEl = document.getElementById('profile-avatar');
             if (data.avatar_low_url) {
@@ -982,7 +1579,7 @@
             img.src = data.avatar_image_url;
             img.onload = () => {
               const showHd = () => {
-                avatarEl.style.setProperty('--avatar-src', `url('${data.avatar_image_url}')`);
+                avatarEl.style.setProperty('--avatar-src', `url('${safeCssUrl(data.avatar_image_url)}')`);
                 avatarEl.classList.add('has-remote');
               };
               if (img.decode) {
@@ -995,7 +1592,36 @@
 
           document.getElementById('display-name').textContent = data.display_name || '';
           document.getElementById('user-handle').textContent = data.handle || '';
-          document.getElementById('profile-bio').textContent = data.bio || '';
+          const bioWrap = document.getElementById('user-bio-wrap');
+          const bioEl = document.getElementById('profile-bio');
+          const bioMore = document.getElementById('profile-bio-more');
+          const bioToggle = document.getElementById('bio-toggle');
+          const BIO_LIMIT = 15;
+          const fullBio = data.bio || '';
+          const moreBio = data.bio_more || '';
+          let bioExpanded = false;
+
+          const renderBio = () => {
+            if (bioExpanded) {
+              bioEl.textContent = fullBio;
+              bioMore.textContent = moreBio;
+              bioMore.classList.toggle('show', !!moreBio);
+            } else {
+              bioEl.textContent = fullBio.length > BIO_LIMIT ? fullBio.slice(0, BIO_LIMIT) + '…' : fullBio;
+              bioMore.textContent = '';
+              bioMore.classList.remove('show');
+            }
+            bioWrap.classList.toggle('bio-expanded', bioExpanded);
+            bioToggle.setAttribute('aria-expanded', bioExpanded ? 'true' : 'false');
+            bioToggle.setAttribute('aria-label', bioExpanded ? '收起简介' : '展开简介');
+          };
+
+          bioToggle.addEventListener('click', () => {
+            bioExpanded = !bioExpanded;
+            renderBio();
+          });
+
+          renderBio();
 
           if (data.link_url) {
             const linkContainer = document.getElementById('meta-link-container');
@@ -1061,6 +1687,7 @@
           }
 
           bannerWrap.style.height = `${newHeight}px`;
+          syncCanvasSize(canvasBg, ctxBg);
 
           const progress = (newHeight - baseHeight) / (maxHeight - baseHeight);
 
@@ -1080,6 +1707,12 @@
         isPulling = false;
 
         bannerWrap.style.transition = 'height 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
+        const syncEnd = performance.now() + 400;
+        const keepSync = () => {
+          syncCanvasSize(canvasBg, ctxBg);
+          if (performance.now() < syncEnd) requestAnimationFrame(keepSync);
+        };
+        requestAnimationFrame(keepSync);
         banner.style.transition = 'filter 0.3s cubic-bezier(0.25, 0.8, 0.5, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
 
         bannerWrap.style.height = `${baseHeight}px`;
