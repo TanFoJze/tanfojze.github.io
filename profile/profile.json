@@ -1,0 +1,24 @@
+{
+  "theme": {
+    "bg": "#10161d",
+    "text": "#e7e9ea",
+    "textMuted": "#71767b",
+    "border": "#2f3336",
+    "accent": "#1d9bf0",
+    "skeleton": "#16181c",
+    "bannerBg": "#1a232d",
+    "imagePlaceholder": "#222222",
+    "avatarPlaceholder": "#333333",
+    "hoverTint": "rgba(255, 255, 255, 0.05)",
+    "iconShadow": "rgba(0, 0, 0, 0.65)"
+  },
+  "background_image_url": "https://pic1.imgdb.cn/i/0353zgfn8WpDXgXGV3vlli.png",
+  "avatar_image_url": "https://pic1.imgdb.cn/i/03542NJpHIA8nHuYGipVeU.png",
+  "display_name": "🅃ɑׁׅ֮n𝔽𝕠𝒥𝓏e🐦",
+  "handle": "@TanFoJze",
+  "bio": "像世界之外的飞鸟一样~",
+  "link_url": "https://tanfojze.github.io",
+  "link_text": "tanfojze.github.io",
+  "birth_info": "生于二月 2, 2008",
+  "join_date": "更新于11月 2026"
+}
