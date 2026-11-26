@@ -11,7 +11,7 @@
   <style>
     :root {
       color-scheme: dark;
-      /* 所有颜色由 profile.json 的 theme 注入；这里只是加载完成前的兜底值 */
+
       --color-bg: #10161d;
       --color-text: #e7e9ea;
       --color-text-muted: #71767b;
@@ -43,7 +43,6 @@
       overscroll-behavior-y: none;
     }
 
-    /* 全屏且屏幕是横的情况下，强行按竖屏方向渲染（浏览器不支持锁定方向时的兜底） */
     html.force-portrait,
     html.force-portrait body {
       width: 100%;
@@ -76,7 +75,6 @@
       min-height: 100vw;
     }
 
-    /* 旋转后视觉左上角 = 局部左下角，按钮得跟着挪 */
     html.force-portrait .fullscreen-btn {
       top: auto;
       bottom: 12px;
@@ -92,7 +90,6 @@
       border-right: 1px solid var(--color-border);
     }
 
-    /* 全屏按钮 */
     .fullscreen-btn {
       position: absolute;
       top: 12px;
@@ -135,7 +132,6 @@
       transform: scale(0.92);
     }
 
-    /* 复制提示 */
     .toast {
       position: fixed;
       left: 50%;
@@ -161,7 +157,6 @@
       transform: translate(-50%, 0);
     }
 
-    /* 背景图容器 */
     .profile-banner-wrap {
       width: 100%;
       height: 160px;
@@ -176,6 +171,7 @@
       top: 0; left: 0;
       width: 100%; height: 100%;
       background-color: var(--color-image-placeholder);
+      background-image: url('./profilebg.png');
       background-size: cover;
       background-position: top center;
       background-repeat: no-repeat;
@@ -183,12 +179,28 @@
       will-change: filter, transform;
     }
 
+    .profile-banner::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: var(--banner-src, none);
+      background-size: cover;
+      background-position: top center;
+      background-repeat: no-repeat;
+      opacity: 0;
+      transition: opacity 0.35s ease;
+      pointer-events: none;
+    }
+
+    .profile-banner.has-remote::after {
+      opacity: 1;
+    }
+
     .profile-section {
       padding: 12px 16px 4px;
       position: relative;
     }
 
-    /* 社交图标：头像右侧两行，第一行常显 + 展开按钮，第二行折叠 */
     .social-links {
       position: absolute;
       top: 3px;
@@ -250,7 +262,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      /* 与图标同宽，两行左右边缘才能对齐 */
+
       width: clamp(12px, 3.6vw, 15px);
       height: clamp(12px, 3.6vw, 15px);
       padding: 0;
@@ -265,7 +277,6 @@
       transition: transform 0.25s ease, opacity 0.2s ease;
     }
 
-    /* 视觉尺寸小，点击区域放大 */
     .social-toggle::before {
       content: '';
       position: absolute;
@@ -298,9 +309,10 @@
       width: 84px;
       height: 84px;
       border-radius: 50%;
-      /* 用渐变兜底：浏览器强制深色只改 background-color，不改图片 */
+
       background-color: var(--color-avatar-placeholder);
-      background-image: linear-gradient(var(--color-avatar-placeholder), var(--color-avatar-placeholder));
+
+      background-image: url('./favicon.png');
       forced-color-adjust: none;
       -webkit-forced-color-adjust: none;
       margin-top: -32px;
@@ -313,7 +325,23 @@
       will-change: filter;
     }
 
-    /* 头像右下角的小国旗角标 */
+    .avatar-large::after {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      border-radius: 50%;
+      background-image: var(--avatar-src, none);
+      background-size: cover;
+      background-position: center;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      pointer-events: none;
+    }
+
+    .avatar-large.has-remote::after {
+      opacity: 1;
+    }
+
     .avatar-flag {
       position: absolute;
       right: -1px;
@@ -471,7 +499,6 @@
       font-weight: 700;
     }
 
-    /* 选中项下方白线，宽度跟随图标+文字 */
     .tab-item.active .tab-inner::after {
       content: '';
       position: absolute;
@@ -521,7 +548,7 @@
     .skeleton-line.short { width: 40%; }
     .skeleton-line.medium { width: 70%; }
     .skeleton-line.long { width: 90%; }
-    
+
     .skeleton-image {
       height: 180px;
       background-color: var(--color-skeleton);
@@ -533,8 +560,7 @@
 <body>
 
   <div class="app-container">
-    
-    <!-- 全屏按钮 -->
+
     <button id="fullscreen-btn" class="fullscreen-btn" title="切换全屏" aria-label="切换全屏">
       <svg viewBox="0 0 24 24" data-group="ui" data-svg="fullscreenEnter"></svg>
     </button>
@@ -556,18 +582,18 @@
         </div>
         <div class="social-row social-row-bottom" id="social-row-bottom"></div>
       </div>
-      
+
       <div class="user-name" id="display-name">加载中...</div>
       <div class="user-handle" id="user-handle"></div>
-      
+
       <div class="user-bio" id="profile-bio"></div>
-      
+
       <div class="user-meta" id="profile-meta">
         <span id="meta-link-container" style="display: none;">
           <svg viewBox="0 0 24 24" data-group="ui" data-svg="link"></svg>
           <a href="#" id="meta-link" target="_blank"></a>
         </span>
-        
+
         <div class="meta-row">
           <span id="meta-birth-container" style="display: none;">
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="birth"></svg>
@@ -646,7 +672,6 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
 
-      // --- SVG：所有图标路径来自 profilesvg.json ---
       let SVG_DATA = {};
 
       const applySvg = () => {
@@ -661,7 +686,6 @@
         }
       };
 
-      // --- 主题：把 profile.json 里的 theme 颜色写入 CSS 变量 ---
       const THEME_VARS = {
         bg: '--color-bg',
         text: '--color-text',
@@ -690,7 +714,6 @@
         });
       };
 
-      // --- 标签切换：点哪个哪个亮，白线跟着走 ---
       const tabItems = document.querySelectorAll('.tab-item');
       tabItems.forEach((tab) => {
         tab.addEventListener('click', () => {
@@ -700,7 +723,6 @@
         });
       });
 
-      // --- 社交图标：展开 / 收起第二行 ---
       const socialBox = document.getElementById('social-links');
       const socialToggle = document.getElementById('social-toggle');
 
@@ -711,7 +733,6 @@
         socialToggle.setAttribute('aria-label', open ? '收起更多' : '展开更多');
       });
 
-      // 图标、名称、网址全部来自 profile.json 的 socials
       const renderSocials = (list) => {
         const topRow = document.getElementById('social-row-top');
         const bottomRow = document.getElementById('social-row-bottom');
@@ -741,7 +762,7 @@
             a.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + d + '"/></svg>';
           }
           if (item.copy) {
-            // 微信 / QQ：点了复制账号，不跳转
+
             a.setAttribute('role', 'button');
             a.addEventListener('click', (e) => {
               e.preventDefault();
@@ -770,12 +791,11 @@
         toggle.style.display = bottomRow.children.length ? 'flex' : 'none';
       };
 
-      // --- 分享按钮：把页面链接复制到剪贴板 ---
       const shareBtn = document.getElementById('share-btn');
       let shareUrl = location.href;
 
       const copyText = (text) => {
-        // https 环境下用原生剪贴板；本地 file:// 打开时退回 execCommand
+
         if (navigator.clipboard && window.isSecureContext) {
           return navigator.clipboard.writeText(text);
         }
@@ -827,7 +847,6 @@
           .catch(() => flashShare('复制失败', false));
       });
 
-      // --- 全屏功能逻辑 ---
       const fsBtn = document.getElementById('fullscreen-btn');
 
       const isFullscreen = () => !!(
@@ -836,14 +855,13 @@
         document.msFullscreenElement
       );
 
-      // 全屏时锁死竖屏，退出全屏再解除
       const lockPortrait = () => {
         try {
           if (screen.orientation && screen.orientation.lock) {
             const p = screen.orientation.lock('portrait');
             if (p && typeof p.catch === 'function') p.catch(() => {});
           }
-        } catch (e) { /* 浏览器不支持锁定方向时保持默认 */ }
+        } catch (e) {  }
       };
 
       const unlockOrientation = () => {
@@ -854,7 +872,6 @@
         } catch (e) {}
       };
 
-      // 兜底：全屏 + 屏幕是横的时候，用 CSS 把内容转成竖屏
       const applyOrientationGuard = () => {
         const root = document.documentElement;
         const landscape = window.innerWidth > window.innerHeight;
@@ -870,7 +887,6 @@
         setTimeout(applyOrientationGuard, 150);
       });
 
-      // 锁定方向是异步的，隔一小会儿再复查两次，别在系统还没转过来时先转一遍
       const scheduleGuard = () => {
         applyOrientationGuard();
         setTimeout(applyOrientationGuard, 250);
@@ -879,7 +895,7 @@
 
       fsBtn.addEventListener('click', () => {
         if (!isFullscreen()) {
-          // 进入全屏
+
           const el = document.documentElement;
           const request = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
           if (request) {
@@ -888,7 +904,7 @@
           }
           lockPortrait();
         } else {
-          // 退出全屏
+
           const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
           if (exit) {
             const p = exit.call(document);
@@ -898,7 +914,6 @@
         }
       });
 
-      // 监听全屏状态变化，切换图标
       const fsIcon = (key) => {
         const d = SVG_DATA.ui && SVG_DATA.ui[key];
         return d ? '<svg viewBox="0 0 24 24"><path d="' + d + '"/></svg>' : '';
@@ -907,7 +922,7 @@
         const full = isFullscreen();
         fsBtn.innerHTML = full ? fsIcon('fullscreenExit') : fsIcon('fullscreenEnter');
         if (full) {
-          lockPortrait();   // 任何方式进入全屏都保持竖屏
+          lockPortrait();
         } else {
           unlockOrientation();
         }
@@ -918,8 +933,6 @@
       document.addEventListener('webkitfullscreenchange', updateFsButton);
       document.addEventListener('MSFullscreenChange', updateFsButton);
 
-
-      // --- 加载 JSON 数据 ---
       const svgPromise = fetch('./profilesvg.json')
         .then((r) => (r.ok ? r.json() : {}))
         .catch(() => ({}));
@@ -942,22 +955,44 @@
 
           if (data.background_image_url) {
             const bannerEl = document.getElementById('profile-banner');
+            if (data.background_low_url) {
+              bannerEl.style.backgroundImage = `url('${data.background_low_url}')`;
+            }
             const img = new Image();
             img.src = data.background_image_url;
             img.onload = () => {
-              bannerEl.style.backgroundImage = `url('${data.background_image_url}')`;
+              const showHd = () => {
+                bannerEl.style.setProperty('--banner-src', `url('${data.background_image_url}')`);
+                bannerEl.classList.add('has-remote');
+              };
+              if (img.decode) {
+                img.decode().then(showHd).catch(showHd);
+              } else {
+                showHd();
+              }
             };
           }
 
           if (data.avatar_image_url) {
             const avatarEl = document.getElementById('profile-avatar');
+            if (data.avatar_low_url) {
+              avatarEl.style.backgroundImage = `url('${data.avatar_low_url}')`;
+            }
             const img = new Image();
             img.src = data.avatar_image_url;
             img.onload = () => {
-              avatarEl.style.backgroundImage = `url('${data.avatar_image_url}')`;
+              const showHd = () => {
+                avatarEl.style.setProperty('--avatar-src', `url('${data.avatar_image_url}')`);
+                avatarEl.classList.add('has-remote');
+              };
+              if (img.decode) {
+                img.decode().then(showHd).catch(showHd);
+              } else {
+                showHd();
+              }
             };
           }
-          
+
           document.getElementById('display-name').textContent = data.display_name || '';
           document.getElementById('user-handle').textContent = data.handle || '';
           document.getElementById('profile-bio').textContent = data.bio || '';
@@ -987,13 +1022,12 @@
           document.getElementById('display-name').textContent = '数据加载失败';
         });
 
-      // --- 下拉拉伸回弹逻辑及模糊效果 ---
       const bannerWrap = document.querySelector('.profile-banner-wrap');
       const banner = document.getElementById('profile-banner');
       let startY = 0;
       let isPulling = false;
-      
-      const baseHeight = 160; 
+
+      const baseHeight = 160;
       const maxHeight = 320;
 
       const getScrollTop = () => {
@@ -1001,7 +1035,7 @@
       };
 
       document.addEventListener('touchstart', (e) => {
-        // 强制竖屏（旋转)模式下坐标轴是反的，跳过下拉拉伸，避免卡住滚动
+
         if (document.documentElement.classList.contains('force-portrait')) return;
         if (getScrollTop() <= 0) {
           startY = e.touches[0].clientY;
@@ -1017,38 +1051,37 @@
         const deltaY = currentY - startY;
 
         if (deltaY > 0) {
-          if (e.cancelable) e.preventDefault(); 
-          
-          const pullDistance = deltaY * 0.4; 
+          if (e.cancelable) e.preventDefault();
+
+          const pullDistance = deltaY * 0.4;
           let newHeight = baseHeight + pullDistance;
 
           if (newHeight > maxHeight) {
             newHeight = maxHeight;
           }
-          
+
           bannerWrap.style.height = `${newHeight}px`;
-          
+
           const progress = (newHeight - baseHeight) / (maxHeight - baseHeight);
-          
-          // 最大模糊 3.5px
+
           const blurAmount = progress * 3.5;
           banner.style.filter = `blur(${blurAmount}px)`;
-          
+
           banner.style.transform = `scale(${1 + progress * 0.08})`;
 
         } else {
           isPulling = false;
           resetBanner();
         }
-      }, { passive: false }); 
+      }, { passive: false });
 
       document.addEventListener('touchend', () => {
         if (!isPulling) return;
         isPulling = false;
-        
+
         bannerWrap.style.transition = 'height 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
         banner.style.transition = 'filter 0.3s cubic-bezier(0.25, 0.8, 0.5, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
-        
+
         bannerWrap.style.height = `${baseHeight}px`;
         banner.style.filter = 'blur(0px)';
         banner.style.transform = 'scale(1)';
