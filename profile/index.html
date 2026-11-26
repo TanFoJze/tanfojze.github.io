@@ -1,1 +1,691 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Profile</title>
+  <style>
+    :root {
+      /* 所有颜色由 profile.json 的 theme 注入；这里只是加载完成前的兜底值 */
+      --color-bg: #10161d;
+      --color-text: #e7e9ea;
+      --color-text-muted: #71767b;
+      --color-border: #2f3336;
+      --color-accent: #1d9bf0;
+      --color-skeleton: #16181c;
+      --color-banner-bg: #1a232d;
+      --color-image-placeholder: #222222;
+      --color-avatar-placeholder: #333333;
+      --color-hover-tint: rgba(255, 255, 255, 0.05);
+      --color-icon-shadow: rgba(0, 0, 0, 0.65);
+    }
 
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    body {
+      background-color: var(--color-bg);
+      color: var(--color-text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      min-height: 100vh;
+      overscroll-behavior-y: none;
+    }
+
+    /* 全屏且屏幕是横的情况下，强行按竖屏方向渲染（浏览器不支持锁定方向时的兜底） */
+    html.force-portrait,
+    html.force-portrait body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+    }
+
+    html.force-portrait body {
+      position: fixed;
+      top: 50%;
+      left: 50%;
+      width: 100vh;
+      height: 100vw;
+      overflow-y: auto;
+      overflow-x: hidden;
+      -webkit-overflow-scrolling: touch;
+      overscroll-behavior: contain;
+      transform: translate(-50%, -50%) rotate(90deg);
+      transform-origin: center center;
+      will-change: transform;
+      background-color: var(--color-bg);
+    }
+
+    html.force-portrait body::-webkit-scrollbar {
+      width: 0;
+    }
+
+    html.force-portrait .app-container {
+      max-width: 100vw;
+      min-height: 100vw;
+    }
+
+    /* 旋转后视觉左上角 = 局部左下角，按钮得跟着挪 */
+    html.force-portrait .fullscreen-btn {
+      top: auto;
+      bottom: 12px;
+      left: 12px;
+    }
+
+    .app-container {
+      max-width: 600px;
+      margin: 0 auto;
+      position: relative;
+      min-height: 100vh;
+      border-left: 1px solid var(--color-border);
+      border-right: 1px solid var(--color-border);
+    }
+
+    /* 全屏按钮 */
+    .fullscreen-btn {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      z-index: 999;
+      background: none;
+      border: none;
+      padding: 0;
+      color: var(--color-text);
+      width: 40px;
+      height: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      -webkit-appearance: none;
+      appearance: none;
+      outline: none;
+      filter: drop-shadow(0 1px 3px var(--color-icon-shadow));
+      transition: opacity 0.2s, transform 0.2s;
+    }
+
+    .fullscreen-btn svg {
+      width: 22px;
+      height: 22px;
+      display: block;
+      stroke: currentColor;
+      stroke-width: 2;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      fill: none;
+    }
+
+    .fullscreen-btn:hover {
+      opacity: 0.75;
+      transform: scale(1.05);
+    }
+
+    .fullscreen-btn:active {
+      transform: scale(0.92);
+    }
+
+    /* 背景图容器 */
+    .profile-banner-wrap {
+      width: 100%;
+      height: 80px;
+      position: relative;
+      overflow: hidden;
+      z-index: 1;
+      background-color: var(--color-banner-bg);
+    }
+
+    .profile-banner {
+      position: absolute;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      background-color: var(--color-image-placeholder);
+      background-size: cover;
+      background-position: top center;
+      background-repeat: no-repeat;
+      transform-origin: top center;
+      will-change: filter, transform;
+    }
+
+    .profile-section {
+      padding: 12px 16px;
+      position: relative;
+    }
+
+    .avatar-large {
+      width: 84px;
+      height: 84px;
+      border-radius: 50%;
+      background-color: var(--color-avatar-placeholder);
+      margin-top: -32px;
+      margin-bottom: 12px;
+      border: 4px solid var(--color-bg);
+      background-size: cover;
+      background-position: center;
+      position: relative;
+      z-index: 2;
+      will-change: filter;
+    }
+
+    .user-name {
+      font-size: 20px;
+      font-weight: 800;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-bottom: 2px;
+    }
+
+    .user-handle {
+      color: var(--color-text-muted);
+      font-size: 15px;
+      margin-bottom: 14px;
+    }
+
+    .user-bio {
+      font-size: 15px;
+      line-height: 1.5;
+      margin-bottom: 12px;
+      white-space: pre-wrap;
+    }
+
+    .user-meta {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+      color: var(--color-text-muted);
+      font-size: 14px;
+      margin-bottom: 14px;
+    }
+
+    .meta-row {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .user-meta span {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .user-meta svg {
+      width: 16px;
+      height: 16px;
+      fill: var(--color-text-muted);
+    }
+
+    .user-meta a {
+      color: var(--color-accent);
+      text-decoration: none;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 8px;
+    }
+
+    .btn-outline {
+      flex: 1;
+      background: transparent;
+      border: 1px solid var(--color-border);
+      color: var(--color-text);
+      padding: 10px 16px;
+      border-radius: 9999px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+
+    .btn-outline:hover {
+      background-color: var(--color-hover-tint);
+    }
+
+    .tabs {
+      display: flex;
+      border-bottom: 1px solid var(--color-border);
+      position: relative;
+      margin-top: 8px;
+    }
+
+    .tab-item {
+      flex: 1;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      padding: 16px 0;
+      color: var(--color-text-muted);
+      font-size: 15px;
+      font-weight: 500;
+      cursor: pointer;
+      position: relative;
+    }
+
+    .tab-item svg {
+      width: 22px;
+      height: 22px;
+      fill: currentColor;
+    }
+
+    .tab-item.active {
+      color: var(--color-text);
+      font-weight: 700;
+    }
+
+    .tab-item.active::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 56px;
+      height: 4px;
+      background-color: var(--color-accent);
+      border-radius: 2px;
+    }
+
+    .tab-item.text-tab {
+      gap: 4px;
+    }
+    
+    .tab-item.text-tab svg {
+      width: 20px;
+      height: 20px;
+    }
+
+    .feed {
+      padding: 16px;
+    }
+
+    .skeleton-post {
+      display: flex;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+
+    .skeleton-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background-color: var(--color-skeleton);
+      flex-shrink: 0;
+    }
+
+    .skeleton-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .skeleton-line {
+      height: 14px;
+      background-color: var(--color-skeleton);
+      border-radius: 4px;
+    }
+
+    .skeleton-line.short { width: 40%; }
+    .skeleton-line.medium { width: 70%; }
+    .skeleton-line.long { width: 90%; }
+    
+    .skeleton-image {
+      height: 180px;
+      background-color: var(--color-skeleton);
+      border-radius: 12px;
+      margin-top: 8px;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="app-container">
+    
+    <!-- 全屏按钮 -->
+    <button id="fullscreen-btn" class="fullscreen-btn" title="切换全屏" aria-label="切换全屏">
+      <svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>
+    </button>
+
+    <div class="profile-banner-wrap">
+      <div class="profile-banner" id="profile-banner"></div>
+    </div>
+
+    <section class="profile-section">
+      <div class="avatar-large" id="profile-avatar"></div>
+      
+      <div class="user-name" id="display-name">加载中...</div>
+      <div class="user-handle" id="user-handle"></div>
+      
+      <div class="user-bio" id="profile-bio"></div>
+      
+      <div class="user-meta" id="profile-meta">
+        <span id="meta-link-container" style="display: none;">
+          <svg viewBox="0 0 24 24"><path d="M18.36 5.64c-1.95-1.96-5.11-1.96-7.07 0L3 13.93V21h7.07l8.29-8.29c1.96-1.96 1.96-5.12 0-7.07zM9.93 19H5v-4.93l7.58-7.58c1.17-1.17 3.07-1.17 4.24 0 1.17 1.17 1.17 3.07 0 4.24L9.93 19z"></path></svg>
+          <a href="#" id="meta-link" target="_blank"></a>
+        </span>
+        
+        <div class="meta-row">
+          <span id="meta-birth-container" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z"></path></svg>
+            <span id="meta-birth"></span>
+          </span>
+          <span id="meta-join-container" style="display: none;">
+            <svg viewBox="0 0 24 24"><path d="M8 2v3h8V2h2v3h1c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V7c0-1.1.9-2 2-2h1V2h2zm12 8H4v9h16v-9zM4 8h16V7H4v1z"></path></svg>
+            <span id="meta-join"></span>
+            <svg viewBox="0 0 24 24" style="width:14px; height:14px; margin-left:2px;"><path d="M9 18l6-6-6-6"></path></svg>
+          </span>
+        </div>
+      </div>
+
+      <div class="action-buttons">
+        <div class="btn-outline">分享</div>
+      </div>
+    </section>
+
+    <div class="tabs">
+      <div class="tab-item active text-tab">
+        <svg viewBox="0 0 24 24"><path d="M4 3h16c1.1 0 2 .9 2 2v14c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2zm0 2v14h16V5H4zm2 3h12v2H6V8zm0 4h12v2H6v-2zm0 4h8v2H6v-2z"></path></svg>
+        帖子
+        <svg viewBox="0 0 24 24" style="width:16px; height:16px; margin-left:2px;"><path d="M7 10l5 5 5-5z"></path></svg>
+      </div>
+      <div class="tab-item">
+        <svg viewBox="0 0 24 24"><path d="M1.751 10c0-4.42 3.584-8 8.005-8h4.366c4.49 0 8.129 3.64 8.129 8.13 0 2.25-.893 4.3-2.348 5.827l-3.141 3.14c-1.527 1.455-3.576 2.348-5.826 2.348H7.756c-4.422 0-8.005-3.58-8.005-8v-3.445zM9.756 4c-3.313 0-6 2.686-6 6v3.445c0 3.313 2.687 6 6 6h3.18c1.34 0 2.58-.536 3.503-1.412l3.142-3.14c.876-.923 1.412-2.164 1.412-3.503 0-3.382-2.743-6.13-6.13-6.13h-4.365-.002z"></path></svg>
+      </div>
+      <div class="tab-item">
+        <svg viewBox="0 0 24 24"><path d="M4.5 3.88l4.432 4.14-1.364 1.46L5.5 7.55V16c0 1.1.896 2 2 2H13v2H7.5c-2.209 0-4-1.79-4-4V7.55L1.432 9.48.068 8.02 4.5 3.88zM16.5 6H11V4h5.5c2.209 0 4 1.79 4 4v8.45l2.068-1.93 1.364 1.46-4.432 4.14-4.432-4.14 1.364-1.46 2.068 1.93V8c0-1.1-.896-2-2-2z"></path></svg>
+      </div>
+      <div class="tab-item">
+        <svg viewBox="0 0 24 24"><path d="M3 5.5C3 4.119 4.119 3 5.5 3h13C19.881 3 21 4.119 21 5.5v13c0 1.381-1.119 2.5-2.5 2.5h-13C4.119 21 3 19.881 3 18.5v-13zM5.5 5c-.276 0-.5.224-.5.5v13c0 .276.224.5.5.5h13c.276 0 .5-.224.5-.5v-13c0-.276-.224-.5-.5-.5h-13zM18 10l-6 3.75L6 10V8l6 3.75L18 8v2z"></path></svg>
+      </div>
+      <div class="tab-item">
+        <svg viewBox="0 0 24 24"><path d="M4 4h16v16H4V4zm2 2v12h12V6H6z"></path></svg>
+      </div>
+    </div>
+
+    <div class="feed">
+      <div class="skeleton-post">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line long"></div>
+          <div class="skeleton-image"></div>
+        </div>
+      </div>
+      <div class="skeleton-post">
+        <div class="skeleton-avatar"></div>
+        <div class="skeleton-content">
+          <div class="skeleton-line short"></div>
+          <div class="skeleton-line medium"></div>
+          <div class="skeleton-line long"></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+
+      // --- 主题：把 profile.json 里的 theme 颜色写入 CSS 变量 ---
+      const THEME_VARS = {
+        bg: '--color-bg',
+        text: '--color-text',
+        textMuted: '--color-text-muted',
+        border: '--color-border',
+        accent: '--color-accent',
+        skeleton: '--color-skeleton',
+        bannerBg: '--color-banner-bg',
+        imagePlaceholder: '--color-image-placeholder',
+        avatarPlaceholder: '--color-avatar-placeholder',
+        hoverTint: '--color-hover-tint',
+        iconShadow: '--color-icon-shadow'
+      };
+
+      const applyTheme = (theme) => {
+        if (!theme) return;
+        const root = document.documentElement;
+        Object.keys(THEME_VARS).forEach((key) => {
+          const value = theme[key];
+          if (typeof value === 'string' && value.trim()) {
+            root.style.setProperty(THEME_VARS[key], value.trim());
+          }
+        });
+      };
+
+      // --- 全屏功能逻辑 ---
+      const fsBtn = document.getElementById('fullscreen-btn');
+
+      const isFullscreen = () => !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+
+      // 全屏时锁死竖屏，退出全屏再解除
+      const lockPortrait = () => {
+        try {
+          if (screen.orientation && screen.orientation.lock) {
+            const p = screen.orientation.lock('portrait');
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          }
+        } catch (e) { /* 浏览器不支持锁定方向时保持默认 */ }
+      };
+
+      const unlockOrientation = () => {
+        try {
+          if (screen.orientation && screen.orientation.unlock) {
+            screen.orientation.unlock();
+          }
+        } catch (e) {}
+      };
+
+      // 兜底：全屏 + 屏幕是横的时候，用 CSS 把内容转成竖屏
+      const applyOrientationGuard = () => {
+        const root = document.documentElement;
+        const landscape = window.innerWidth > window.innerHeight;
+        if (isFullscreen() && landscape) {
+          root.classList.add('force-portrait');
+        } else {
+          root.classList.remove('force-portrait');
+        }
+      };
+
+      window.addEventListener('resize', applyOrientationGuard);
+      window.addEventListener('orientationchange', () => {
+        setTimeout(applyOrientationGuard, 150);
+      });
+
+      // 锁定方向是异步的，隔一小会儿再复查两次，别在系统还没转过来时先转一遍
+      const scheduleGuard = () => {
+        applyOrientationGuard();
+        setTimeout(applyOrientationGuard, 250);
+        setTimeout(applyOrientationGuard, 700);
+      };
+
+      fsBtn.addEventListener('click', () => {
+        if (!isFullscreen()) {
+          // 进入全屏
+          const el = document.documentElement;
+          const request = el.requestFullscreen || el.webkitRequestFullscreen || el.msRequestFullscreen;
+          if (request) {
+            const p = request.call(el);
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          }
+          lockPortrait();
+        } else {
+          // 退出全屏
+          const exit = document.exitFullscreen || document.webkitExitFullscreen || document.msExitFullscreen;
+          if (exit) {
+            const p = exit.call(document);
+            if (p && typeof p.catch === 'function') p.catch(() => {});
+          }
+          unlockOrientation();
+        }
+      });
+
+      // 监听全屏状态变化，切换图标
+      const FS_ICON = {
+        enter: '<svg viewBox="0 0 24 24"><path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/></svg>',
+        exit: '<svg viewBox="0 0 24 24"><path d="M9 4v5H4M15 4v5h5M9 20v-5H4M15 20v-5h5"/></svg>'
+      };
+      const updateFsButton = () => {
+        const full = isFullscreen();
+        fsBtn.innerHTML = full ? FS_ICON.exit : FS_ICON.enter;
+        if (full) {
+          lockPortrait();   // 任何方式进入全屏都保持竖屏
+        } else {
+          unlockOrientation();
+        }
+        scheduleGuard();
+      };
+
+      document.addEventListener('fullscreenchange', updateFsButton);
+      document.addEventListener('webkitfullscreenchange', updateFsButton);
+      document.addEventListener('MSFullscreenChange', updateFsButton);
+
+
+      // --- 加载 JSON 数据 ---
+      fetch('./profile.json')
+        .then(response => {
+          if (!response.ok) throw new Error('Network response was not ok');
+          return response.json();
+        })
+        .then(data => {
+          applyTheme(data.theme);
+
+          if (data.background_image_url) {
+            const bannerEl = document.getElementById('profile-banner');
+            const img = new Image();
+            img.src = data.background_image_url;
+            img.onload = () => {
+              bannerEl.style.backgroundImage = `url('${data.background_image_url}')`;
+            };
+          }
+
+          if (data.avatar_image_url) {
+            const avatarEl = document.getElementById('profile-avatar');
+            const img = new Image();
+            img.src = data.avatar_image_url;
+            img.onload = () => {
+              avatarEl.style.backgroundImage = `url('${data.avatar_image_url}')`;
+            };
+          }
+          
+          document.getElementById('display-name').textContent = data.display_name || '';
+          document.getElementById('user-handle').textContent = data.handle || '';
+          document.getElementById('profile-bio').textContent = data.bio || '';
+
+          if (data.link_url) {
+            const linkContainer = document.getElementById('meta-link-container');
+            const linkEl = document.getElementById('meta-link');
+            linkEl.href = data.link_url;
+            linkEl.textContent = data.link_text || data.link_url;
+            linkContainer.style.display = 'flex';
+          }
+
+          if (data.birth_info) {
+            const birthContainer = document.getElementById('meta-birth-container');
+            document.getElementById('meta-birth').textContent = data.birth_info;
+            birthContainer.style.display = 'flex';
+          }
+
+          if (data.join_date) {
+            const joinContainer = document.getElementById('meta-join-container');
+            document.getElementById('meta-join').textContent = data.join_date;
+            joinContainer.style.display = 'flex';
+          }
+        })
+        .catch(error => {
+          console.error('Error loading profile.json:', error);
+          document.getElementById('display-name').textContent = '数据加载失败';
+        });
+
+      // --- 下拉拉伸回弹逻辑及模糊效果 ---
+      const bannerWrap = document.querySelector('.profile-banner-wrap');
+      const banner = document.getElementById('profile-banner');
+      let startY = 0;
+      let isPulling = false;
+      
+      const baseHeight = 80; 
+      const maxHeight = 160;
+
+      const getScrollTop = () => {
+        return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      };
+
+      document.addEventListener('touchstart', (e) => {
+        // 强制竖屏（旋转)模式下坐标轴是反的，跳过下拉拉伸，避免卡住滚动
+        if (document.documentElement.classList.contains('force-portrait')) return;
+        if (getScrollTop() <= 0) {
+          startY = e.touches[0].clientY;
+          isPulling = true;
+          bannerWrap.style.transition = 'none';
+          banner.style.transition = 'none';
+        }
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (!isPulling) return;
+        const currentY = e.touches[0].clientY;
+        const deltaY = currentY - startY;
+
+        if (deltaY > 0) {
+          if (e.cancelable) e.preventDefault(); 
+          
+          const pullDistance = deltaY * 0.4; 
+          let newHeight = baseHeight + pullDistance;
+
+          if (newHeight > maxHeight) {
+            newHeight = maxHeight;
+          }
+          
+          bannerWrap.style.height = `${newHeight}px`;
+          
+          const progress = (newHeight - baseHeight) / (maxHeight - baseHeight);
+          
+          // 最大模糊 3.5px
+          const blurAmount = progress * 3.5;
+          banner.style.filter = `blur(${blurAmount}px)`;
+          
+          banner.style.transform = `scale(${1 + progress * 0.08})`;
+
+        } else {
+          isPulling = false;
+          resetBanner();
+        }
+      }, { passive: false }); 
+
+      document.addEventListener('touchend', () => {
+        if (!isPulling) return;
+        isPulling = false;
+        
+        bannerWrap.style.transition = 'height 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
+        banner.style.transition = 'filter 0.3s cubic-bezier(0.25, 0.8, 0.5, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
+        
+        bannerWrap.style.height = `${baseHeight}px`;
+        banner.style.filter = 'blur(0px)';
+        banner.style.transform = 'scale(1)';
+      });
+
+      function resetBanner() {
+        bannerWrap.style.height = `${baseHeight}px`;
+        banner.style.filter = 'blur(0px)';
+        banner.style.transform = 'scale(1)';
+      }
+
+      bannerWrap.addEventListener('transitionend', () => {
+        if (!isPulling) {
+          bannerWrap.style.transition = 'none';
+          banner.style.transition = 'none';
+        }
+      });
+    });
+  </script>
+</body>
+</html>
