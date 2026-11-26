@@ -19,6 +19,8 @@
       --color-hover-tint: rgba(255, 255, 255, 0.05);
       --color-icon-shadow: rgba(0, 0, 0, 0.65);
       --color-social-icon: #ffffff;
+      --color-flag-red: #de2910;
+      --color-flag-yellow: #ffde00;
     }
 
     * {
@@ -128,10 +130,36 @@
       transform: scale(0.92);
     }
 
+    /* 复制提示 */
+    .toast {
+      position: fixed;
+      left: 50%;
+      bottom: 40px;
+      transform: translate(-50%, 8px);
+      max-width: 78vw;
+      padding: 9px 16px;
+      border-radius: 9999px;
+      background: var(--color-border);
+      color: var(--color-text);
+      font-size: 13px;
+      line-height: 1.3;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 9999;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
     /* 背景图容器 */
     .profile-banner-wrap {
       width: 100%;
-      height: 80px;
+      height: 160px;
       position: relative;
       overflow: hidden;
       z-index: 1;
@@ -217,10 +245,11 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: 17px;
-      height: 17px;
+      /* 与图标同宽，两行左右边缘才能对齐 */
+      width: clamp(12px, 3.6vw, 15px);
+      height: clamp(12px, 3.6vw, 15px);
       padding: 0;
-      margin-left: 2px;
+      position: relative;
       background: none;
       border: none;
       color: var(--color-social-icon);
@@ -231,9 +260,19 @@
       transition: transform 0.25s ease, opacity 0.2s ease;
     }
 
+    /* 视觉尺寸小，点击区域放大 */
+    .social-toggle::before {
+      content: '';
+      position: absolute;
+      top: -8px;
+      left: -8px;
+      right: -8px;
+      bottom: -8px;
+    }
+
     .social-toggle svg {
-      width: 12px;
-      height: 12px;
+      width: 100%;
+      height: 100%;
       fill: none;
       stroke: currentColor;
       stroke-width: 2.8;
@@ -263,6 +302,36 @@
       position: relative;
       z-index: 2;
       will-change: filter;
+    }
+
+    /* 头像右下角的小国旗角标 */
+    .avatar-flag {
+      position: absolute;
+      right: -1px;
+      bottom: -1px;
+      width: 20px;
+      height: 14px;
+      border-radius: 3px;
+      overflow: hidden;
+      border: 1.5px solid var(--color-bg);
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
+      z-index: 3;
+      line-height: 0;
+      pointer-events: none;
+    }
+
+    .avatar-flag svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .avatar-flag .flag-bg {
+      fill: var(--color-flag-red);
+    }
+
+    .avatar-flag .flag-star {
+      fill: var(--color-flag-yellow);
     }
 
     .user-name {
@@ -466,7 +535,9 @@
     </div>
 
     <section class="profile-section">
-      <div class="avatar-large" id="profile-avatar"></div>
+      <div class="avatar-large" id="profile-avatar">
+        <span class="avatar-flag" title="中国" aria-label="中国"><svg viewBox="0 0 30 20" preserveAspectRatio="none"><rect class="flag-bg" width="30" height="20"/><polygon class="flag-star" points="5.00,2.00 5.67,4.07 7.85,4.07 6.09,5.35 6.76,7.43 5.00,6.15 3.24,7.43 3.91,5.35 2.15,4.07 4.33,4.07"/><polygon class="flag-star" points="9.14,2.51 9.62,1.97 9.25,1.34 9.91,1.63 10.39,1.08 10.33,1.80 11.00,2.09 10.29,2.25 10.22,2.97 9.85,2.35"/><polygon class="flag-star" points="11.01,4.14 11.66,3.82 11.56,3.10 12.07,3.62 12.72,3.30 12.38,3.95 12.88,4.47 12.17,4.34 11.83,4.99 11.73,4.27"/><polygon class="flag-star" points="11.04,6.73 11.76,6.70 11.96,6.00 12.21,6.68 12.94,6.66 12.37,7.10 12.62,7.79 12.01,7.38 11.44,7.83 11.64,7.13"/><polygon class="flag-star" points="9.22,8.38 9.90,8.63 10.35,8.06 10.32,8.79 11.00,9.05 10.30,9.24 10.26,9.96 9.87,9.36 9.16,9.55 9.62,8.98"/></svg></span>
+      </div>
 
       <div class="social-links" id="social-links">
         <div class="social-row social-row-top" id="social-row-top">
@@ -561,6 +632,8 @@
 
   </div>
 
+  <div class="toast" id="toast"></div>
+
   <script>
     document.addEventListener('DOMContentLoaded', () => {
 
@@ -577,7 +650,9 @@
         avatarPlaceholder: '--color-avatar-placeholder',
         hoverTint: '--color-hover-tint',
         iconShadow: '--color-icon-shadow',
-        socialIcon: '--color-social-icon'
+        socialIcon: '--color-social-icon',
+        flagRed: '--color-flag-red',
+        flagYellow: '--color-flag-yellow'
       };
 
       const applyTheme = (theme) => {
@@ -640,7 +715,16 @@
           if (item.icon) {
             a.innerHTML = '<svg viewBox="0 0 24 24"><path d="' + item.icon + '"/></svg>';
           }
-          if (item.url) {
+          if (item.copy) {
+            // 微信 / QQ：点了复制账号，不跳转
+            a.setAttribute('role', 'button');
+            a.addEventListener('click', (e) => {
+              e.preventDefault();
+              copyText(item.copy)
+                .then(() => showToast(item.copy))
+                .catch(() => showToast('复制失败'));
+            });
+          } else if (item.url) {
             a.href = item.url;
             a.rel = 'noopener noreferrer';
             if (/^https?:/i.test(item.url)) a.target = '_blank';
@@ -689,6 +773,16 @@
           document.body.removeChild(ta);
           if (ok) resolve(); else reject(new Error('copy failed'));
         });
+      };
+
+      let toastTimer = null;
+      const showToast = (text) => {
+        const el = document.getElementById('toast');
+        if (!el) return;
+        el.textContent = text;
+        el.classList.add('show');
+        clearTimeout(toastTimer);
+        toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
       };
 
       let shareTimer = null;
@@ -866,8 +960,8 @@
       let startY = 0;
       let isPulling = false;
       
-      const baseHeight = 80; 
-      const maxHeight = 160;
+      const baseHeight = 160; 
+      const maxHeight = 320;
 
       const getScrollTop = () => {
         return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
