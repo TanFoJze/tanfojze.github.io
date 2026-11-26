@@ -31,6 +31,22 @@
     "flagRed": "#de2910",
     "flagYellow": "#ffde00"
   },
+  "themeRed": {
+    "bg": "#5c080d",
+    "text": "#fff6f6",
+    "textMuted": "#ffb3b3",
+    "border": "#8f151c",
+    "accent": "#ffd700",
+    "skeleton": "#42060a",
+    "bannerBg": "#4a070c",
+    "imagePlaceholder": "#3d0508",
+    "avatarPlaceholder": "#560a0f",
+    "hoverTint": "rgba(255, 255, 255, 0.07)",
+    "iconShadow": "rgba(0, 0, 0, 0.55)",
+    "socialIcon": "#ffffff",
+    "flagRed": "#de2910",
+    "flagYellow": "#ffde00"
+  },
   "background_low_url": "./profilebg.png",
   "background_image_url": "https://pic1.imgdb.cn/i/0353zgfn8WpDXgXGV3vlli.png",
   "avatar_low_url": "./favicon.png",
