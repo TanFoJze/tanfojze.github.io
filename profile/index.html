@@ -8,6 +8,11 @@
   <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
   <script>
     (function () {
+      var w = window.innerWidth || 384;
+      var z = Math.max(0.7, Math.min(1.6, w / 411));
+      document.documentElement.style.setProperty('--fit', z.toFixed(4));
+    })();
+    (function () {
       var blocked = false;
       try {
         blocked = window.top !== window.self && window.top.location.host !== window.location.host;
@@ -86,6 +91,8 @@
     }
 
     html.force-portrait .app-container {
+      zoom: 1;
+      width: 100vw;
       max-width: 100vw;
       min-height: 100vw;
     }
@@ -97,10 +104,12 @@
     }
 
     .app-container {
-      max-width: 600px;
+      width: 411px;
+      max-width: none;
       margin: 0 auto;
       position: relative;
-      min-height: 100vh;
+      min-height: calc(100vh / var(--fit, 1));
+      zoom: var(--fit, 1);
       border-left: 1px solid var(--color-border);
       border-right: 1px solid var(--color-border);
     }
@@ -152,15 +161,15 @@
       margin-left: auto;
       display: flex;
       align-items: center;
-      gap: clamp(3px, 0.9vw, 5px);
+      gap: 4px;
       align-self: center;
       flex-shrink: 0;
       flex-wrap: nowrap;
     }
 
     .tool-btn {
-      width: clamp(11px, 3.3vw, 14px);
-      height: clamp(11px, 3.3vw, 14px);
+      width: 12px;
+      height: 12px;
       flex-shrink: 0;
       padding: 0;
       display: flex;
@@ -236,6 +245,14 @@
 
     html.day.weather-bg-snow .profile-banner-wrap::after {
       background-color: rgba(0, 0, 0, 0.14);
+    }
+
+    html.leaving body {
+      background-color: #000000;
+    }
+
+    html.leaving .app-container {
+      visibility: hidden;
     }
 
     #weather-bg {
@@ -325,6 +342,10 @@
       border-right-color: rgba(255, 255, 255, 0.14);
     }
 
+    html.red-theme.glass body::before {
+      background: rgba(92, 8, 13, 0.55);
+    }
+
     html.day.glass .app-container {
       background: rgba(255, 255, 255, 0.42);
       border-left-color: rgba(0, 0, 0, 0.08);
@@ -351,8 +372,9 @@
       bottom: 40px;
       transform: translate(-50%, 8px);
       max-width: 78vw;
-      padding: 9px 16px;
-      border-radius: 9999px;
+      padding: 10px 18px;
+      border-radius: 14px;
+      white-space: pre-line;
       background: var(--color-border);
       color: var(--color-text);
       font-size: 13px;
@@ -363,6 +385,80 @@
       transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 9999;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .pull-hint {
+      position: absolute;
+      left: 50%;
+      bottom: 16px;
+      transform: translateX(-50%);
+      color: #ffffff;
+      font-size: 13px;
+      letter-spacing: 0.06em;
+      white-space: nowrap;
+      opacity: 0;
+      pointer-events: none;
+      z-index: 4;
+      text-shadow: 0 1px 5px rgba(0, 0, 0, 0.7);
+    }
+
+    .flag-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      z-index: 1;
+      pointer-events: none;
+      opacity: 0;
+      transform: scale(1.05);
+      background-color: var(--color-flag-red);
+      transition: opacity 0.45s ease, transform 0.55s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .flag-overlay svg {
+      width: 100%;
+      height: 100%;
+      display: block;
+    }
+
+    .flag-overlay .fo-bg {
+      fill: var(--color-flag-red);
+    }
+
+    .flag-overlay .fo-star {
+      fill: var(--color-flag-yellow);
+    }
+
+    .flag-overlay.on {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .flag-wave {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      pointer-events: none;
+      z-index: 340;
+      background-color: var(--wave-color, #c8102e);
+      opacity: 0.22;
+      clip-path: circle(0vmax at var(--fx, 50%) var(--fy, 50%));
+      transition: clip-path 0.42s cubic-bezier(0.22, 0.61, 0.36, 1);
+      will-change: clip-path;
+      -webkit-mask-image: linear-gradient(to bottom, transparent 0, transparent var(--wave-top, 0px), #000 var(--wave-top, 0px));
+      mask-image: linear-gradient(to bottom, transparent 0, transparent var(--wave-top, 0px), #000 var(--wave-top, 0px));
+    }
+
+    .flag-wave.on {
+      clip-path: circle(150vmax at var(--fx, 50%) var(--fy, 50%));
+    }
+
+    .toast.nowrap {
+      white-space: nowrap;
+      max-width: 94vw;
     }
 
     .toast.show {
@@ -381,10 +477,12 @@
 
     .profile-banner {
       position: absolute;
-      top: 0; left: 0;
-      width: 100%; height: 100%;
+      top: -16px;
+      left: -16px;
+      right: -16px;
+      bottom: -16px;
+      transform: translate3d(var(--tilt-x, 0px), var(--tilt-y, 0px), 0) scale(var(--pull-scale, 1));
       background-color: var(--color-image-placeholder);
-      background-image: url('./profilebg.png');
       background-size: cover;
       background-position: top center;
       background-repeat: no-repeat;
@@ -412,6 +510,11 @@
     .profile-section {
       padding: 12px 16px 4px;
       position: relative;
+      transition: margin-top 0.45s cubic-bezier(0.22, 0.61, 0.36, 1);
+    }
+
+    .profile-section.flag-open {
+      margin-top: 32px;
     }
 
     .social-links {
@@ -427,7 +530,7 @@
     .social-row {
       display: flex;
       align-items: center;
-      gap: clamp(5px, 1.5vw, 9px);
+      gap: 6px;
     }
 
     .social-row-bottom {
@@ -440,7 +543,7 @@
 
     .social-links.expanded .social-row-bottom {
       max-height: 40px;
-      margin-top: clamp(4px, 1.2vw, 8px);
+      margin-top: 5px;
       opacity: 1;
     }
 
@@ -448,8 +551,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      width: clamp(12px, 3.6vw, 15px);
-      height: clamp(12px, 3.6vw, 15px);
+      width: 13px;
+      height: 13px;
       color: var(--color-social-icon);
       text-decoration: none;
       transition: opacity 0.2s, transform 0.2s;
@@ -476,8 +579,8 @@
       align-items: center;
       justify-content: center;
 
-      width: clamp(12px, 3.6vw, 15px);
-      height: clamp(12px, 3.6vw, 15px);
+      width: 13px;
+      height: 13px;
       padding: 0;
       position: relative;
       background: none;
@@ -524,8 +627,6 @@
       border-radius: 50%;
 
       background-color: var(--color-avatar-placeholder);
-
-      background-image: url('./favicon.png');
       forced-color-adjust: none;
       -webkit-forced-color-adjust: none;
       margin-top: -32px;
@@ -534,7 +635,8 @@
       background-size: cover;
       background-position: center;
       position: relative;
-      z-index: 2;
+      /* 高于红色扩散层（340），头像整体不受染色 */
+      z-index: 345;
       will-change: filter;
     }
 
@@ -555,6 +657,47 @@
       opacity: 1;
     }
 
+    .avatar-emblem {
+      position: absolute;
+      top: -6px;
+      left: -6px;
+      right: -6px;
+      bottom: -6px;
+      /* 白底圆 + 国徽居中，图自带的白边与圆底融为一体 */
+      background-color: #ffffff;
+      background-image: url('https://www.gov.cn/images/newlogo19ysp_lt.png'), url('./emblem.png');
+      background-size: 86% auto, 86% auto;
+      background-position: center, center;
+      background-repeat: no-repeat, no-repeat;
+      border-radius: 50%;
+      overflow: hidden;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      z-index: 4;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+    }
+
+    html.flag-mode .avatar-emblem {
+      opacity: 1;
+    }
+
+    html.flag-mode .avatar-large {
+      background-color: transparent !important;
+      background-image: none !important;
+      border-color: transparent !important;
+    }
+
+    html.flag-mode .social-links,
+    html.flag-mode .toolbar,
+    html.flag-mode .tabs,
+    html.flag-mode .feed,
+    html.flag-mode .avatar-flag {
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.28s ease;
+    }
+
     .avatar-flag {
       position: absolute;
       right: -1px;
@@ -567,7 +710,7 @@
       box-shadow: 0 1px 3px rgba(0, 0, 0, 0.55);
       z-index: 3;
       line-height: 0;
-      pointer-events: none;
+      cursor: pointer;
     }
 
     .avatar-flag svg {
@@ -843,11 +986,23 @@
 
     <div class="profile-banner-wrap">
       <div class="profile-banner" id="profile-banner"></div>
+      <div class="flag-overlay" id="flag-overlay" aria-hidden="true">
+        <svg viewBox="0 0 30 20" preserveAspectRatio="xMidYMin slice">
+          <rect class="fo-bg" width="30" height="20" fill="#de2910"/>
+          <polygon class="fo-star" points="5.00,2.00 5.67,4.07 7.85,4.07 6.09,5.35 6.76,7.43 5.00,6.15 3.24,7.43 3.91,5.35 2.15,4.07 4.33,4.07" fill="#ffde00"/>
+          <polygon class="fo-star" points="9.14,2.51 9.62,1.97 9.25,1.34 9.91,1.63 10.39,1.08 10.33,1.80 11.00,2.09 10.29,2.25 10.22,2.97 9.85,2.35" fill="#ffde00"/>
+          <polygon class="fo-star" points="11.01,4.14 11.66,3.82 11.56,3.10 12.07,3.62 12.72,3.30 12.38,3.95 12.88,4.47 12.17,4.34 11.83,4.99 11.73,4.27" fill="#ffde00"/>
+          <polygon class="fo-star" points="11.04,6.73 11.76,6.70 11.96,6.00 12.21,6.68 12.94,6.66 12.37,7.10 12.62,7.79 12.01,7.38 11.44,7.83 11.64,7.13" fill="#ffde00"/>
+          <polygon class="fo-star" points="9.22,8.38 9.90,8.63 10.35,8.06 10.32,8.79 11.00,9.05 10.30,9.24 10.26,9.96 9.87,9.36 9.16,9.55 9.62,8.98" fill="#ffde00"/>
+        </svg>
+      </div>
       <canvas id="weather-bg"></canvas>
+      <div class="pull-hint" id="pull-hint">拉动跳转</div>
     </div>
 
     <section class="profile-section">
       <div class="avatar-large" id="profile-avatar">
+        <span class="avatar-emblem" aria-hidden="true"></span>
         <span class="avatar-flag" title="中国" aria-label="中国"><svg viewBox="0 0 30 20" preserveAspectRatio="none" data-flag="1"></svg></span>
       </div>
 
@@ -883,6 +1038,7 @@
             <svg viewBox="0 0 24 24" style="width:14px; height:14px; margin-left:2px;" data-group="ui" data-svg="chevronRight"></svg>
           </span>
 
+          <div class="toolbar" id="toolbar">
           <button class="tool-btn" id="btn-music" type="button" aria-label="暂停音乐">
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="musicOn"></svg>
           </button>
@@ -890,7 +1046,7 @@
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="replay"></svg>
           </button>
           <button class="tool-btn" id="btn-weather" type="button" aria-label="天气效果">
-            <svg viewBox="0 0 24 24" data-group="ui" data-svg="rain"></svg>
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="bgRain"></svg>
           </button>
           <button class="tool-btn" id="btn-theme" type="button" aria-label="白天/夜晚">
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="moon"></svg>
@@ -898,6 +1054,7 @@
           <button class="tool-btn" id="btn-glass" type="button" aria-label="玻璃效果">
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="glass"></svg>
           </button>
+          </div>
         </div>
       </div>
 
@@ -963,6 +1120,8 @@
 
   <div class="toast" id="toast"></div>
 
+  <div class="flag-wave" id="flag-wave"></div>
+
   <canvas id="weather"></canvas>
 
   <audio id="bgm" loop preload="auto"></audio>
@@ -970,10 +1129,27 @@
   <script>
     document.addEventListener('DOMContentLoaded', () => {
 
+      let flagLocked = false;
+      let waveStartTimer = null;
+      let stopWeatherForLeave = null;
+      let pauseBgmForLeave = null;
+      let flagTapCount = 0;
+      let flagTapTimer = null;
+
       const canvasMain = document.getElementById('weather');
       const canvasBg = document.getElementById('weather-bg');
       const ctxMain = canvasMain ? canvasMain.getContext('2d') : null;
       const ctxBg = canvasBg ? canvasBg.getContext('2d') : null;
+
+      const FIT_BASE = 411;
+      const applyFit = () => {
+        const w = window.innerWidth || FIT_BASE;
+        const z = Math.max(0.7, Math.min(1.6, w / FIT_BASE));
+        document.documentElement.style.setProperty('--fit', z.toFixed(4));
+      };
+      applyFit();
+      window.addEventListener('resize', applyFit);
+      window.addEventListener('orientationchange', () => setTimeout(applyFit, 120));
 
       const safePath = (d) => (typeof d === 'string' && /^[MmZzLlHhVvCcSsQqTtAa0-9.,\s+-]+$/.test(d)) ? d : '';
 
@@ -1162,13 +1338,14 @@
       };
 
       let toastTimer = null;
-      const showToast = (text) => {
+      const showToast = (text, ms, nowrap) => {
         const el = document.getElementById('toast');
         if (!el) return;
         el.textContent = text;
+        el.classList.toggle('nowrap', !!nowrap);
         el.classList.add('show');
         clearTimeout(toastTimer);
-        toastTimer = setTimeout(() => el.classList.remove('show'), 1800);
+        toastTimer = setTimeout(() => el.classList.remove('show'), ms || 1800);
       };
 
       let shareTimer = null;
@@ -1182,14 +1359,21 @@
         }, 1600);
       };
 
-      const sharePayload = () => ({
-        title: document.title,
-        text: (data.display_name || '') + ' ' + (data.handle || ''),
-        url: shareUrl
-      });
+      const shareTarget = () => (document.documentElement.classList.contains('flag-mode')
+        ? 'https://www.gov.cn'
+        : shareUrl);
+
+      const sharePayload = () => {
+        const govLink = document.documentElement.classList.contains('flag-mode');
+        return {
+          title: govLink ? '中国政府网' : document.title,
+          text: govLink ? '中华人民共和国' : (data.display_name || '') + ' ' + (data.handle || ''),
+          url: shareTarget()
+        };
+      };
 
       const fallbackCopy = () => {
-        copyText(shareUrl)
+        copyText(shareTarget())
           .then(() => flashShare('已复制', true))
           .catch(() => flashShare('复制失败', false));
       };
@@ -1303,33 +1487,237 @@
 
       Promise.all([dataPromise, svgPromise])
         .then(([data, svg]) => {
-          SVG_DATA = svg || {};
-          applySvg();
           applyTheme(data.theme);
 
           if (data.share_url) shareUrl = data.share_url;
 
-          renderSocials(data.socials);
+          document.getElementById('display-name').textContent = data.display_name || '';
+          document.getElementById('user-handle').textContent = data.handle || '';
+          const avatarBox = document.getElementById('profile-avatar');
+          const flagBox = document.querySelector('.avatar-flag');
+          const shownName = data.display_name || '';
 
-          if (data.background_image_url) {
-            const bannerEl = document.getElementById('profile-banner');
-            if (data.background_low_url) {
-              bannerEl.style.backgroundImage = `url('${data.background_low_url}')`;
-            }
-            const img = new Image();
-            img.src = data.background_image_url;
-            img.onload = () => {
-              const showHd = () => {
-                bannerEl.style.setProperty('--banner-src', `url('${safeCssUrl(data.background_image_url)}')`);
-                bannerEl.classList.add('has-remote');
-              };
-              if (img.decode) {
-                img.decode().then(showHd).catch(showHd);
-              } else {
-                showHd();
-              }
-            };
+          if (avatarBox) {
+            avatarBox.addEventListener('click', () => {
+              showToast(shownName + '希望\n安宁与美好，常伴您左右', 3000);
+            });
           }
+
+          const flagWave = document.getElementById('flag-wave');
+          const flagOverlay = document.getElementById('flag-overlay');
+          let waveTimer = null;
+          let waveMaskTimer = null;
+
+
+          if (flagBox) {
+            flagBox.addEventListener('click', (e) => {
+              e.stopPropagation();
+              if (flagLocked) return;
+
+              flagTapCount += 1;
+              if (flagTapCount < 2) {
+                showToast('中华人民共和国万岁 世界人民大团结万岁', 1600, true);
+                clearTimeout(flagTapTimer);
+                flagTapTimer = setTimeout(() => { flagTapCount = 0; }, 1600);
+                return;
+              }
+              flagTapCount = 0;
+              clearTimeout(flagTapTimer);
+
+              const wasNight = isNight;
+              const hadGlass = document.documentElement.classList.contains('glass');
+              const wasPlaying = bgmEl ? !bgmEl.paused : false;
+
+              if (data.themeRed) {
+                applyTheme(data.themeRed);
+                document.documentElement.classList.add('red-theme');
+              }
+              document.documentElement.classList.remove('glass');
+              if (btnGlass) btnGlass.classList.remove('on');
+
+              if (bgmEl && !bgmEl.paused) {
+                bgmEl.pause();
+                setIcon(btnMusic, 'musicOff');
+              }
+
+              bioSwap(CORE_VALUES);
+
+              const nameEl = document.getElementById('display-name');
+              const handleEl = document.getElementById('user-handle');
+              const birthEl = document.getElementById('meta-birth');
+              const linkEl = document.getElementById('meta-link');
+              if (nameEl) nameEl.textContent = '中华人民共和国';
+              if (handleEl) handleEl.textContent = '@1949.10.1';
+              if (birthEl) birthEl.textContent = '成立于1949年10月1日';
+              document.documentElement.classList.add('flag-mode');
+              if (linkEl) {
+                linkEl.href = 'https://www.gov.cn';
+                linkEl.textContent = 'www.gov.cn';
+              }
+              flagLocked = true;
+              if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+              particles = [];
+              clearAll();
+              document.documentElement.classList.remove(
+                'weather-rain', 'weather-snow', 'weather-bg-rain', 'weather-bg-snow'
+              );
+
+              const overlayEl = document.getElementById('flag-overlay');
+              if (overlayEl) {
+                overlayEl.classList.add('on');
+                overlayEl.style.opacity = '1';
+                overlayEl.style.transform = 'scale(1)';
+              }
+              const sectionEl = document.querySelector('.profile-section');
+              if (sectionEl) sectionEl.classList.add('flag-open');
+              const wrapEl2 = document.querySelector('.profile-banner-wrap');
+              if (wrapEl2) {
+                const bw2 = wrapEl2.getBoundingClientRect().width;
+                const flagH = Math.max(120, Math.round(bw2 / 1.5));
+                wrapEl2.style.transition = 'height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+                wrapEl2.style.height = flagH + 'px';
+              }
+              clearTimeout(waveMaskTimer);
+              waveMaskTimer = setTimeout(() => {
+                const w2 = document.querySelector('.profile-banner-wrap');
+                if (w2 && flagWave) {
+                  flagWave.style.setProperty('--wave-top', Math.round(w2.getBoundingClientRect().bottom) + 'px');
+                }
+              }, 480);
+
+              if (flagWave) {
+                const r = flagBox.getBoundingClientRect();
+                flagWave.style.setProperty('--fx', (r.left + r.width / 2).toFixed(1) + 'px');
+                flagWave.style.setProperty('--fy', (r.top + r.height / 2).toFixed(1) + 'px');
+                flagWave.style.setProperty('--wave-color', (data.themeRed && data.themeRed.bg) || '#c8102e');
+                const wrapEl = document.querySelector('.profile-banner-wrap');
+                if (wrapEl) {
+                  const wr = wrapEl.getBoundingClientRect();
+                  const fh = Math.max(120, Math.round(wrapEl ? wrapEl.getBoundingClientRect().width / 1.5 : 274));
+                  flagWave.style.setProperty('--wave-top', fh.toFixed(0) + 'px');
+                }
+                clearTimeout(waveStartTimer);
+                waveStartTimer = setTimeout(() => {
+                  flagWave.classList.add('on');
+                }, 460);
+                clearTimeout(waveTimer);
+                waveTimer = setTimeout(() => {
+                  flagWave.classList.remove('on');
+                  flagLocked = false;
+                  particles = [];
+                  startWeather();
+
+                  applyTheme(wasNight ? data.theme : (data.themeLight || data.theme));
+                  isNight = wasNight;
+                  document.documentElement.classList.remove('red-theme');
+                  document.documentElement.classList.remove('flag-mode');
+                  if (hadGlass) {
+                    document.documentElement.classList.add('glass');
+                    if (btnGlass) btnGlass.classList.add('on');
+                  }
+                  if (wasPlaying && bgmEl) {
+                    const pb = bgmEl.play();
+                    if (pb && pb.catch) pb.catch(() => {});
+                    setIcon(btnMusic, 'musicOn');
+                  }
+                  bioSwap(null);
+                  const nameEl2 = document.getElementById('display-name');
+                  const handleEl2 = document.getElementById('user-handle');
+                  const birthEl2 = document.getElementById('meta-birth');
+                  const linkEl2 = document.getElementById('meta-link');
+                  if (nameEl2) nameEl2.textContent = data.display_name || '';
+                  if (handleEl2) handleEl2.textContent = data.handle || '';
+                  if (birthEl2) birthEl2.textContent = data.birth_info || '';
+                  if (linkEl2) {
+                    linkEl2.href = data.link_url || '#';
+                    linkEl2.textContent = data.link_text || data.link_url || '';
+                  }
+                  const ov = document.getElementById('flag-overlay');
+                  if (ov) {
+                    ov.classList.remove('on');
+                    ov.style.opacity = '0';
+                    ov.style.transform = 'scale(1.05)';
+                  }
+                  if (sectionEl) sectionEl.classList.remove('flag-open');
+                  const w3 = document.querySelector('.profile-banner-wrap');
+                  if (w3) w3.style.height = '160px';
+                }, 3000);
+              }
+
+              showToast('中华人民共和国万岁 世界人民大团结万岁', 3000, true);
+            });
+          }
+
+          const bioWrap = document.getElementById('user-bio-wrap');
+          const bioEl = document.getElementById('profile-bio');
+          const bioMore = document.getElementById('profile-bio-more');
+          const bioToggle = document.getElementById('bio-toggle');
+          const BIO_LIMIT = 15;
+          const fullBio = data.bio || '';
+          const moreBio = data.bio_more || '';
+          let bioExpanded = false;
+
+          const renderBio = () => {
+            if (bioExpanded) {
+              bioEl.textContent = fullBio;
+              bioMore.textContent = moreBio;
+              bioMore.classList.toggle('show', !!moreBio);
+            } else {
+              bioEl.textContent = fullBio.length > BIO_LIMIT ? fullBio.slice(0, BIO_LIMIT) + '…' : fullBio;
+              bioMore.textContent = '';
+              bioMore.classList.remove('show');
+            }
+            bioWrap.classList.toggle('bio-expanded', bioExpanded);
+            bioToggle.setAttribute('aria-expanded', bioExpanded ? 'true' : 'false');
+            bioToggle.setAttribute('aria-label', bioExpanded ? '收起简介' : '展开简介');
+          };
+
+          const CORE_VALUES = '富强 民主 文明 和谐 自由 平等 公正 法治 爱国 敬业 诚信 友善';
+
+          const bioSwap = (text) => {
+            if (!bioEl) return;
+            bioEl.style.opacity = '';
+            if (text === null) {
+              renderBio();
+              bioMore.classList.remove('show');
+            } else {
+              bioEl.textContent = text;
+              bioMore.textContent = '';
+              bioMore.classList.remove('show');
+            }
+          };
+
+          bioToggle.addEventListener('click', () => {
+            bioExpanded = !bioExpanded;
+            renderBio();
+          });
+
+          renderBio();
+
+          if (data.link_url) {
+            const linkContainer = document.getElementById('meta-link-container');
+            const linkEl = document.getElementById('meta-link');
+            linkEl.href = data.link_url;
+            linkEl.textContent = data.link_text || data.link_url;
+            linkContainer.style.display = 'flex';
+          }
+
+          if (data.birth_info) {
+            const birthContainer = document.getElementById('meta-birth-container');
+            document.getElementById('meta-birth').textContent = data.birth_info;
+            birthContainer.style.display = 'flex';
+          }
+
+          if (data.join_date) {
+            const joinContainer = document.getElementById('meta-join-container');
+            document.getElementById('meta-join').textContent = data.join_date;
+            joinContainer.style.display = 'flex';
+          }
+
+
+          SVG_DATA = svg || {};
+          applySvg();
+          renderSocials(data.socials);
 
           if (data.bgm_url) {
             const bgm = document.getElementById('bgm');
@@ -1342,10 +1730,13 @@
                 const p = bgm.play();
                 if (p && typeof p.then === 'function') {
                   p.then(() => {
+                    setIcon(btnMusic, 'musicOn');
                     ['touchstart', 'click', 'keydown'].forEach((ev) => {
                       document.removeEventListener(ev, unlockBgm);
                     });
-                  }).catch(() => {});
+                  }).catch(() => {
+                    setIcon(btnMusic, 'musicOff');
+                  });
                 }
               };
 
@@ -1398,8 +1789,8 @@
           });
 
           const WEATHER_SEQ = ['rain', 'snow', 'none', 'bgRain', 'bgSnow'];
-          let weatherMode = 'rain';
-          let weatherIndex = 0;
+          let weatherMode = 'bgRain';
+          let weatherIndex = 3;
           let particles = [];
           let rafId = null;
 
@@ -1538,8 +1929,10 @@
             weatherMode = WEATHER_SEQ[weatherIndex];
             setIcon(btnWeather, weatherMode);
             btnWeather.classList.toggle('on', weatherMode !== 'none');
-            startWeather();
             showToast(WEATHER_LABEL[weatherMode] || '');
+            /* 国旗展示期间只记模式，等红旗退场再生效 */
+            if (flagLocked) return;
+            startWeather();
           });
 
           let isNight = true;
@@ -1566,87 +1959,162 @@
             ro.observe(canvasMain);
           }
 
+          stopWeatherForLeave = () => {
+            if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            particles = [];
+            clearAll();
+            document.documentElement.classList.remove(
+              'weather-rain', 'weather-snow', 'weather-bg-rain', 'weather-bg-snow'
+            );
+          };
+
+          pauseBgmForLeave = () => {
+            const b = document.getElementById('bgm');
+            if (b && !b.paused) b.pause();
+          };
+
           btnWeather.classList.add('on');
           document.documentElement.style.setProperty('--glass-image', `url('${safeCssUrl(data.background_image_url) || './profilebg.png'}')`);
           startWeather();
 
-          if (data.avatar_image_url) {
+          const preloadImage = (url) => new Promise((resolve) => {
+            if (!url) { resolve(null); return; }
+            const im = new Image();
+            im.onload = () => resolve(im);
+            im.onerror = () => resolve(null);
+            im.src = url;
+          });
+
+          const loadPictures = async () => {
+            const bannerEl = document.getElementById('profile-banner');
             const avatarEl = document.getElementById('profile-avatar');
-            if (data.avatar_low_url) {
-              avatarEl.style.backgroundImage = `url('${data.avatar_low_url}')`;
+
+            const lowBg = await preloadImage(data.background_low_url);
+            if (lowBg && bannerEl) bannerEl.style.backgroundImage = `url('${data.background_low_url}')`;
+
+            const lowAv = await preloadImage(data.avatar_low_url);
+            if (lowAv && avatarEl) avatarEl.style.backgroundImage = `url('${data.avatar_low_url}')`;
+
+            const hdBg = await preloadImage(data.background_image_url);
+            if (hdBg && bannerEl) {
+              const apply = () => {
+                bannerEl.style.setProperty('--banner-src', `url('${safeCssUrl(data.background_image_url)}')`);
+                bannerEl.classList.add('has-remote');
+              };
+              if (hdBg.decode) hdBg.decode().then(apply).catch(apply); else apply();
             }
-            const img = new Image();
-            img.src = data.avatar_image_url;
-            img.onload = () => {
-              const showHd = () => {
+
+            const hdAv = await preloadImage(data.avatar_image_url);
+            if (hdAv && avatarEl) {
+              const apply = () => {
                 avatarEl.style.setProperty('--avatar-src', `url('${safeCssUrl(data.avatar_image_url)}')`);
                 avatarEl.classList.add('has-remote');
               };
-              if (img.decode) {
-                img.decode().then(showHd).catch(showHd);
-              } else {
-                showHd();
-              }
-            };
-          }
-
-          document.getElementById('display-name').textContent = data.display_name || '';
-          document.getElementById('user-handle').textContent = data.handle || '';
-          const bioWrap = document.getElementById('user-bio-wrap');
-          const bioEl = document.getElementById('profile-bio');
-          const bioMore = document.getElementById('profile-bio-more');
-          const bioToggle = document.getElementById('bio-toggle');
-          const BIO_LIMIT = 15;
-          const fullBio = data.bio || '';
-          const moreBio = data.bio_more || '';
-          let bioExpanded = false;
-
-          const renderBio = () => {
-            if (bioExpanded) {
-              bioEl.textContent = fullBio;
-              bioMore.textContent = moreBio;
-              bioMore.classList.toggle('show', !!moreBio);
-            } else {
-              bioEl.textContent = fullBio.length > BIO_LIMIT ? fullBio.slice(0, BIO_LIMIT) + '…' : fullBio;
-              bioMore.textContent = '';
-              bioMore.classList.remove('show');
+              if (hdAv.decode) hdAv.decode().then(apply).catch(apply); else apply();
             }
-            bioWrap.classList.toggle('bio-expanded', bioExpanded);
-            bioToggle.setAttribute('aria-expanded', bioExpanded ? 'true' : 'false');
-            bioToggle.setAttribute('aria-label', bioExpanded ? '收起简介' : '展开简介');
           };
 
-          bioToggle.addEventListener('click', () => {
-            bioExpanded = !bioExpanded;
-            renderBio();
-          });
-
-          renderBio();
-
-          if (data.link_url) {
-            const linkContainer = document.getElementById('meta-link-container');
-            const linkEl = document.getElementById('meta-link');
-            linkEl.href = data.link_url;
-            linkEl.textContent = data.link_text || data.link_url;
-            linkContainer.style.display = 'flex';
-          }
-
-          if (data.birth_info) {
-            const birthContainer = document.getElementById('meta-birth-container');
-            document.getElementById('meta-birth').textContent = data.birth_info;
-            birthContainer.style.display = 'flex';
-          }
-
-          if (data.join_date) {
-            const joinContainer = document.getElementById('meta-join-container');
-            document.getElementById('meta-join').textContent = data.join_date;
-            joinContainer.style.display = 'flex';
-          }
+          loadPictures();
         })
         .catch(error => {
           console.error('Error loading profile.json:', error);
           document.getElementById('display-name').textContent = '数据加载失败';
         });
+
+      const TILT_MAX_X = 14;
+      const TILT_MAX_Y = 14;
+      let tiltRawX = 0, tiltRawY = 0;
+      let tiltTargetX = 0, tiltTargetY = 0;
+      let tiltCurX = 0, tiltCurY = 0;
+      let tiltVelX = 0, tiltVelY = 0;
+      let tiltRaf = null;
+      let tiltOn = false;
+      let tiltLastTime = 0;
+      let tiltSetX = 0, tiltSetY = 0;
+
+      const TILT_STIFF = 0.05;
+      const TILT_DAMP = 0.78;
+
+      const easeTilt = (v) => Math.sin(Math.max(-1, Math.min(1, v)) * Math.PI / 2);
+
+      const tiltLoop = (now) => {
+        const t = typeof now === 'number' ? now : performance.now();
+        const dt = tiltLastTime ? Math.min(48, t - tiltLastTime) : 16.67;
+        tiltLastTime = t;
+        const step = Math.max(0.25, Math.min(3, dt / 16.67));
+        const decay = Math.pow(TILT_DAMP, step);
+
+        const maxStep = 0.045 * step;
+        const dxRaw = tiltRawX - tiltTargetX;
+        const dyRaw = tiltRawY - tiltTargetY;
+        tiltTargetX += Math.max(-maxStep, Math.min(maxStep, dxRaw));
+        tiltTargetY += Math.max(-maxStep, Math.min(maxStep, dyRaw));
+
+        tiltVelX = (tiltVelX + (tiltTargetX - tiltCurX) * TILT_STIFF) * decay;
+        tiltVelY = (tiltVelY + (tiltTargetY - tiltCurY) * TILT_STIFF) * decay;
+        tiltCurX += tiltVelX * step;
+        tiltCurY += tiltVelY * step;
+
+        if (Math.abs(tiltVelX) < 0.0004 && Math.abs(tiltTargetX - tiltCurX) < 0.0004) {
+          tiltVelX = 0;
+          tiltCurX = tiltTargetX;
+        }
+        if (Math.abs(tiltVelY) < 0.0004 && Math.abs(tiltTargetY - tiltCurY) < 0.0004) {
+          tiltVelY = 0;
+          tiltCurY = tiltTargetY;
+        }
+
+        const nx = easeTilt(tiltCurX) * TILT_MAX_X;
+        const ny = easeTilt(tiltCurY) * TILT_MAX_Y;
+        const bannerEl = document.getElementById('profile-banner');
+        if (bannerEl) {
+          if (Math.abs(nx - tiltSetX) > 0.05) {
+            bannerEl.style.setProperty('--tilt-x', nx.toFixed(2) + 'px');
+            tiltSetX = nx;
+          }
+          if (Math.abs(ny - tiltSetY) > 0.05) {
+            bannerEl.style.setProperty('--tilt-y', ny.toFixed(2) + 'px');
+            tiltSetY = ny;
+          }
+        }
+        tiltRaf = requestAnimationFrame(tiltLoop);
+      };
+
+      const onOrient = (e) => {
+        const gamma = typeof e.gamma === 'number' ? e.gamma : 0;
+        const beta = typeof e.beta === 'number' ? e.beta : 90;
+        tiltRawX = Math.max(-1, Math.min(1, -gamma / 30));
+        tiltRawY = Math.max(-1, Math.min(1, (beta - 90) / 45));
+      };
+
+      const enableTilt = () => {
+        if (tiltOn) return;
+        const start = () => {
+          if (tiltOn) return;
+          tiltOn = true;
+          window.addEventListener('deviceorientation', onOrient, true);
+          if (!tiltRaf) tiltRaf = requestAnimationFrame(tiltLoop);
+        };
+        if (typeof DeviceOrientationEvent !== 'undefined'
+            && typeof DeviceOrientationEvent.requestPermission === 'function') {
+          DeviceOrientationEvent.requestPermission().then((res) => {
+            if (res === 'granted') start();
+          }).catch(() => {});
+        } else {
+          start();
+        }
+      };
+
+      document.addEventListener('touchstart', enableTilt, { once: true, passive: true });
+      document.addEventListener('click', enableTilt, { once: true });
+
+      document.addEventListener('visibilitychange', () => {
+        if (document.hidden) {
+          if (tiltRaf) { cancelAnimationFrame(tiltRaf); tiltRaf = null; }
+        } else if (tiltOn && !tiltRaf) {
+          tiltRaf = requestAnimationFrame(tiltLoop);
+        }
+      });
 
       const bannerWrap = document.querySelector('.profile-banner-wrap');
       const banner = document.getElementById('profile-banner');
@@ -1661,6 +2129,7 @@
       };
 
       document.addEventListener('touchstart', (e) => {
+        if (flagLocked) return;
 
         if (document.documentElement.classList.contains('force-portrait')) return;
         if (getScrollTop() <= 0) {
@@ -1672,6 +2141,10 @@
       }, { passive: true });
 
       document.addEventListener('touchmove', (e) => {
+        if (flagLocked) {
+          if (e.cancelable) e.preventDefault();
+          return;
+        }
         if (!isPulling) return;
         const currentY = e.touches[0].clientY;
         const deltaY = currentY - startY;
@@ -1679,11 +2152,20 @@
         if (deltaY > 0) {
           if (e.cancelable) e.preventDefault();
 
-          const pullDistance = deltaY * 0.4;
-          let newHeight = baseHeight + pullDistance;
+          const span = (maxHeight - baseHeight) * 2.2;
+          const t = Math.min(1, deltaY / span);
+          const pulled = (maxHeight - baseHeight) * (1 - Math.pow(1 - t, 2));
+          let newHeight = baseHeight + pulled;
 
           if (newHeight > maxHeight) {
             newHeight = maxHeight;
+          }
+
+          const hint = document.getElementById('pull-hint');
+          if (hint) {
+            const hp = (newHeight - baseHeight) / (maxHeight - baseHeight);
+            hint.style.opacity = Math.max(0, Math.min(1, hp)).toFixed(3);
+            hint.textContent = hp >= 0.97 ? '松手跳转' : '拉动跳转';
           }
 
           bannerWrap.style.height = `${newHeight}px`;
@@ -1694,7 +2176,7 @@
           const blurAmount = progress * 3.5;
           banner.style.filter = `blur(${blurAmount}px)`;
 
-          banner.style.transform = `scale(${1 + progress * 0.08})`;
+          banner.style.setProperty('--pull-scale', (1 + progress * 0.08).toFixed(3));
 
         } else {
           isPulling = false;
@@ -1702,10 +2184,35 @@
         }
       }, { passive: false });
 
+      document.addEventListener('wheel', (e) => {
+        if (flagLocked && e.cancelable) e.preventDefault();
+      }, { passive: false });
+
+      let leaving = false;
+
+      const leaveTo = () => {
+        if (leaving) return;
+        leaving = true;
+        if (typeof stopWeatherForLeave === 'function') stopWeatherForLeave();
+        if (typeof pauseBgmForLeave === 'function') pauseBgmForLeave();
+        document.documentElement.classList.add('leaving');
+        setTimeout(() => {
+          window.location.href = 'https://tanfojze.github.io/tanfojze/';
+        }, 40);
+      };
+
       document.addEventListener('touchend', () => {
         if (!isPulling) return;
         isPulling = false;
 
+        const curH = parseFloat(bannerWrap.style.height) || baseHeight;
+        if (curH >= maxHeight - 1) {
+          leaveTo();
+          return;
+        }
+
+        const h1 = document.getElementById('pull-hint');
+        if (h1) h1.style.opacity = '0';
         bannerWrap.style.transition = 'height 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
         const syncEnd = performance.now() + 400;
         const keepSync = () => {
@@ -1717,13 +2224,15 @@
 
         bannerWrap.style.height = `${baseHeight}px`;
         banner.style.filter = 'blur(0px)';
-        banner.style.transform = 'scale(1)';
+        banner.style.setProperty('--pull-scale', '1');
       });
 
       function resetBanner() {
+        const h0 = document.getElementById('pull-hint');
+        if (h0) h0.style.opacity = '0';
         bannerWrap.style.height = `${baseHeight}px`;
         banner.style.filter = 'blur(0px)';
-        banner.style.transform = 'scale(1)';
+        banner.style.setProperty('--pull-scale', '1');
       }
 
       bannerWrap.addEventListener('transitionend', () => {
