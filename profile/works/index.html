@@ -1,1 +1,153 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="night">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>作品</title>
+<style>
+      :root {
+        color-scheme: dark;
+        --bg: #04070a;
+        --text: #e7e9ea;
+        --text-muted: #71767b;
+        --border: #24282b;
+        --accent: #1d9bf0;
+        --skeleton: #0d1116;
+        --hover: rgba(255, 255, 255, 0.05);
+        --card: rgba(255, 255, 255, 0.04);
+      }
+      html[data-theme="day"] { color-scheme: light; }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        background: var(--bg);
+        color: var(--text);
+        font: 15px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "PingFang SC", "Microsoft YaHei", sans-serif;
+        padding: 16px;
+        min-height: 100vh;
+        transition: background 0.25s, color 0.25s;
+      }
+      .page-title { font-size: 20px; font-weight: 700; }
+      .page-sub { color: var(--text-muted); font-size: 13px; margin-top: 2px; margin-bottom: 14px; }
+      .card {
+        background: var(--card);
+        border: 1px solid var(--border);
+        border-radius: 12px;
+        padding: 14px;
+        margin-bottom: 10px;
+        transition: background 0.25s, border-color 0.25s;
+      }
+      .card h3 { font-size: 15px; margin-bottom: 4px; }
+      .card .muted { color: var(--text-muted); font-size: 13px; }
+      a { color: var(--accent); text-decoration: none; }
+      a:hover { text-decoration: underline; }
+      .chip {
+        display: inline-block; padding: 2px 10px; border: 1px solid var(--border);
+        border-radius: 999px; font-size: 12px; color: var(--text-muted);
+        margin: 2px 6px 2px 0; background: var(--card);
+      }
+      .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; }
+      @media (max-width: 360px) { .grid { grid-template-columns: 1fr; } }
+      .cover {
+        height: 72px; border-radius: 8px; margin-bottom: 8px;
+        background: linear-gradient(135deg, var(--accent), var(--skeleton));
+        opacity: 0.85;
+      }
+      /* 玻璃效果：卡片半透明 + 模糊，body 透明让主页的磨砂透过来 */
+      html[data-glass] .card {
+        background: color-mix(in srgb, var(--bg) 55%, transparent);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        border-color: color-mix(in srgb, var(--border) 70%, transparent);
+      }
+      html[data-glass] body { background: transparent; }
+</style>
+</head>
+<body>
+  <div class="page-title">作品</div>
+  <div class="page-sub">项目作品集 · 与主页实时联动的页面</div>
 
+  <div class="grid">
+    <div class="card">
+      <div class="cover"></div>
+      <h3>个人主页</h3>
+      <p class="muted">你现在看到的这套主页。</p>
+      <span class="chip">Web</span>
+    </div>
+    <div class="card">
+      <div class="cover"></div>
+      <h3>作品二</h3>
+      <p class="muted">一句话简介占位。</p>
+      <span class="chip">App</span>
+    </div>
+    <div class="card">
+      <div class="cover"></div>
+      <h3>作品三</h3>
+      <p class="muted">一句话简介占位。</p>
+      <span class="chip">游戏</span>
+    </div>
+    <div class="card">
+      <div class="cover"></div>
+      <h3>作品四</h3>
+      <p class="muted">一句话简介占位。</p>
+      <span class="chip">工具</span>
+    </div>
+  </div>
+<script>
+    (function () {
+      var DEFAULTS = {
+        night: { bg: '#04070a', text: '#e7e9ea', textMuted: '#71767b', border: '#24282b', accent: '#1d9bf0', skeleton: '#0d1116', hover: 'rgba(255,255,255,0.05)' },
+        day:   { bg: '#ffffff', text: '#0f1419', textMuted: '#536471', border: '#cfd9de', accent: '#1d9bf0', skeleton: '#eff3f4', hover: 'rgba(0,0,0,0.03)' }
+      };
+
+      function apply(msg) {
+        if (!msg || msg.type !== 'profile-state') return;
+        var theme = msg.theme === 'day' ? 'day' : 'night';
+        var glass = !!msg.glass;
+        var pal = (msg.palette && msg.palette.bg) ? msg.palette : DEFAULTS[theme];
+        var root = document.documentElement;
+        root.setAttribute('data-theme', theme);
+        if (glass) root.setAttribute('data-glass', '1'); else root.removeAttribute('data-glass');
+        root.style.setProperty('--bg', pal.bg);
+        root.style.setProperty('--text', pal.text);
+        root.style.setProperty('--text-muted', pal.textMuted);
+        root.style.setProperty('--border', pal.border);
+        root.style.setProperty('--accent', pal.accent);
+        root.style.setProperty('--skeleton', pal.skeleton);
+        root.style.setProperty('--hover', pal.hover);
+        root.style.colorScheme = theme;
+      }
+
+      window.addEventListener('message', function (e) {
+        if (!e.data || e.data.type !== 'profile-state') return;
+        apply(e.data);
+      });
+
+      /* 载入时向主页请求一次当前状态 */
+      try {
+        if (window.parent && window.parent !== window) {
+          window.parent.postMessage({ type: 'profile-state-request' }, '*');
+        }
+      } catch (e) {}
+
+      /* 同源兜底：直接从主页读 */
+      try {
+        if (window.parent && window.parent !== window && window.parent.document) {
+          var ph = window.parent.document.documentElement;
+          var pcs = window.parent.getComputedStyle(ph);
+          var gv = function (n) { return (pcs.getPropertyValue(n) || '').trim(); };
+          apply({
+            type: 'profile-state',
+            theme: ph.classList.contains('day') ? 'day' : 'night',
+            glass: ph.classList.contains('glass'),
+            palette: {
+              bg: gv('--color-bg'), text: gv('--color-text'), textMuted: gv('--color-text-muted'),
+              border: gv('--color-border'), accent: gv('--color-accent'),
+              skeleton: gv('--color-skeleton'), hover: gv('--color-hover-tint')
+            }
+          });
+        }
+      } catch (e) {}
+    })();
+</script>
+</body>
+</html>
