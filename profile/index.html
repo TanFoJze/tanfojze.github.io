@@ -5,7 +5,7 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>Profile</title>
   <meta name="color-scheme" content="dark">
-  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'none'">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' https: data:; media-src 'self' https:; connect-src 'self'; frame-src 'self' https:; object-src 'none'; base-uri 'self'; form-action 'none'">
   <script>
     (function () {
       var w = window.innerWidth || 384;
@@ -63,6 +63,7 @@
       overscroll-behavior-y: none;
     }
 
+    /* 强制竖屏：把竖屏页面整体旋转 90° 铺满横屏视口（原来的居中旋转会溢出/裁切，这里改成贴角旋转 + 正确尺寸） */
     html.force-portrait,
     html.force-portrait body {
       width: 100%;
@@ -72,16 +73,16 @@
 
     html.force-portrait body {
       position: fixed;
-      top: 50%;
-      left: 50%;
+      top: 0;
+      left: 0;
       width: 100vh;
       height: 100vw;
       overflow-y: auto;
       overflow-x: hidden;
       -webkit-overflow-scrolling: touch;
       overscroll-behavior: contain;
-      transform: translate(-50%, -50%) rotate(90deg);
-      transform-origin: center center;
+      transform-origin: 0 0;
+      transform: rotate(90deg) translateY(-100%);
       will-change: transform;
       background-color: var(--color-bg);
     }
@@ -91,15 +92,17 @@
     }
 
     html.force-portrait .app-container {
-      zoom: 1;
-      width: 100vw;
-      max-width: 100vw;
-      min-height: 100vw;
+      width: 100%;
+      max-width: 100%;
+      min-width: 0;
+      margin: 0;
+      min-height: 100%;
+      border-left: none;
+      border-right: none;
     }
 
     html.force-portrait .fullscreen-btn {
-      top: auto;
-      bottom: 12px;
+      top: 12px;
       left: 12px;
     }
 
@@ -155,7 +158,6 @@
     .fullscreen-btn:active {
       transform: scale(0.92);
     }
-
 
     .toolbar {
       margin-left: auto;
@@ -385,6 +387,24 @@
       transition: opacity 0.2s ease, transform 0.2s ease;
       z-index: 9999;
       box-shadow: 0 4px 16px rgba(0, 0, 0, 0.45);
+    }
+
+    .boot-veil {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background-color: #000000;
+      z-index: 9999;
+      opacity: 1;
+      pointer-events: none;
+      animation: bootFade 0.42s ease 0.1s forwards;
+    }
+
+    @keyframes bootFade {
+      from { opacity: 1; }
+      to { opacity: 0; visibility: hidden; }
     }
 
     .pull-hint {
@@ -811,7 +831,6 @@
       display: block;
     }
 
-
     .user-meta {
       display: flex;
       flex-direction: column;
@@ -934,46 +953,148 @@
     }
 
     .feed {
-      padding: 16px;
+      padding: 0;
     }
 
-    .skeleton-post {
+    /* iframe 背景跟随主题：黑夜黑、白天白、玻璃半透明；color-scheme 让里面的网页默认色也跟着换 */
+    .feed-frame {
+      display: block;
+      width: 100%;
+      border: none;
+      height: calc(100vh - 210px);
+      min-height: 420px;
+      background-color: var(--color-bg);
+      color-scheme: dark;
+    }
+    html.day .feed-frame { color-scheme: light; }
+    html.glass .feed-frame {
+      background-color: color-mix(in srgb, var(--color-bg) 55%, transparent);
+    }
+
+    .feed-empty {
+      display: none;
+      padding: 40px 16px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 14px;
+      line-height: 1.6;
+    }
+
+    /* 国旗模式：只留横幅与国旗，其余交互区隐藏 */
+    html.flag-mode .social-links,
+    html.flag-mode .toolbar,
+    html.flag-mode .tabs,
+    html.flag-mode .feed {
+      display: none;
+    }
+
+  
+    /* ---------- 无障碍与节流 ---------- */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+
+    button:focus-visible,
+    a:focus-visible,
+    .btn-outline:focus-visible,
+    .tab-item:focus-visible {
+      outline: 2px solid var(--color-accent);
+      outline-offset: 2px;
+    }
+
+    /* 桌面端页面滚动条压暗，和整体暗色一致 */
+    body::-webkit-scrollbar { width: 8px; }
+    body::-webkit-scrollbar-thumb { background: var(--color-border); border-radius: 4px; }
+    body::-webkit-scrollbar-track { background: transparent; }
+
+  
+    /* ---------- 音乐网址弹窗：全屏模糊 + 与主界面同宽的方形卡片，配色随主题 ---------- */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 10000;
       display: flex;
-      gap: 12px;
-      margin-bottom: 24px;
+      align-items: center;
+      justify-content: center;
+      padding: 0;
+      background-color: rgba(4, 7, 10, 0.45);
+      background-color: color-mix(in srgb, var(--color-bg, #10161d) 45%, transparent);
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
     }
+    .modal-overlay[hidden] { display: none; }
 
-    .skeleton-avatar {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background-color: var(--color-skeleton);
+    /* 宽度 = 主界面（411px × 缩放），完全对齐；无圆角、无描边 */
+    .modal-card {
+      width: calc(411px * var(--fit, 1));
+      max-width: 100vw;
       flex-shrink: 0;
+      box-sizing: border-box;
+      padding: 18px 16px;
+      background-color: var(--color-bg, #10161d);
+      border-radius: 0;
+      border: none;
+      box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
     }
-
-    .skeleton-content {
-      flex: 1;
+    /* 玻璃效果：卡片本体半透明 + 自身也模糊，白天/黑夜由变量自动切换 */
+    html.glass .modal-card {
+      background-color: color-mix(in srgb, var(--color-bg, #10161d) 52%, transparent);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+    }
+    .modal-title {
+      color: var(--color-text);
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 14px;
+    }
+    .modal-input {
+      width: 100%;
+      box-sizing: border-box;
+      padding: 10px 12px;
+      border: none;
+      border-radius: 0;
+      background-color: var(--color-skeleton, #16181c);
+      color: var(--color-text);
+      font-size: 13px;
+      outline: none;
+    }
+    .modal-input::placeholder { color: var(--color-text-muted, #71767b); }
+    .modal-input:focus { background-color: var(--color-hover-tint, rgba(255, 255, 255, 0.05)); }
+    html.glass .modal-input {
+      background-color: color-mix(in srgb, var(--color-skeleton, #16181c) 55%, transparent);
+    }
+    .modal-actions {
       display: flex;
-      flex-direction: column;
-      gap: 8px;
+      gap: 10px;
+      margin-top: 16px;
+    }
+    /* 和「分享」按钮同款：胶囊描边，各占一半宽度 */
+    .modal-btn {
+      flex: 1 1 50%;
+      min-width: 0;
+      background: transparent;
+      border: 1px solid var(--color-border, #2f3336);
+      border-radius: 9999px;
+      color: var(--color-text);
+      padding: 9px 16px;
+      font-size: 15px;
+      font-weight: 700;
+      text-align: center;
+      cursor: pointer;
+      transition: background-color 0.2s, border-color 0.2s, color 0.2s, transform 0.1s;
+    }
+    .modal-btn:hover { background-color: var(--color-hover-tint, rgba(255, 255, 255, 0.05)); }
+    .modal-btn:active { transform: scale(0.98); }
+    .modal-confirm {
+      color: var(--color-accent, #1d9bf0);
+      border-color: var(--color-accent, #1d9bf0);
     }
 
-    .skeleton-line {
-      height: 14px;
-      background-color: var(--color-skeleton);
-      border-radius: 4px;
-    }
-
-    .skeleton-line.short { width: 40%; }
-    .skeleton-line.medium { width: 70%; }
-    .skeleton-line.long { width: 90%; }
-
-    .skeleton-image {
-      height: 180px;
-      background-color: var(--color-skeleton);
-      border-radius: 12px;
-      margin-top: 8px;
-    }
   </style>
 </head>
 <body>
@@ -1039,6 +1160,9 @@
           </span>
 
           <div class="toolbar" id="toolbar">
+          <button class="tool-btn" id="btn-music-url" type="button" aria-label="自定义音乐网址" title="自定义音乐网址">
+            <svg viewBox="0 0 24 24" data-group="ui" data-svg="musicUrl"></svg>
+          </button>
           <button class="tool-btn" id="btn-music" type="button" aria-label="暂停音乐">
             <svg viewBox="0 0 24 24" data-group="ui" data-svg="musicOn"></svg>
           </button>
@@ -1064,31 +1188,31 @@
     </section>
 
     <div class="tabs">
-      <div class="tab-item active">
+      <div data-tab="intro" class="tab-item active">
         <span class="tab-inner">
           <svg viewBox="0 0 24 24" data-group="tabs" data-svg="intro"></svg>
           <span class="tab-label">介绍</span>
         </span>
       </div>
-      <div class="tab-item">
+      <div data-tab="posts" class="tab-item">
         <span class="tab-inner">
           <svg viewBox="0 0 24 24" data-group="tabs" data-svg="posts"></svg>
           <span class="tab-label">帖子</span>
         </span>
       </div>
-      <div class="tab-item">
+      <div data-tab="works" class="tab-item">
         <span class="tab-inner">
           <svg viewBox="0 0 24 24" data-group="tabs" data-svg="works"></svg>
           <span class="tab-label">作品</span>
         </span>
       </div>
-      <div class="tab-item">
+      <div data-tab="opensource" class="tab-item">
         <span class="tab-inner">
           <svg viewBox="0 0 24 24" data-group="tabs" data-svg="opensource"></svg>
           <span class="tab-label">开源</span>
         </span>
       </div>
-      <div class="tab-item">
+      <div data-tab="more" class="tab-item">
         <span class="tab-inner">
           <svg viewBox="0 0 24 24" data-group="tabs" data-svg="more"></svg>
           <span class="tab-label">更多</span>
@@ -1096,29 +1220,27 @@
       </div>
     </div>
 
-    <div class="feed">
-      <div class="skeleton-post">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line medium"></div>
-          <div class="skeleton-line long"></div>
-          <div class="skeleton-image"></div>
-        </div>
-      </div>
-      <div class="skeleton-post">
-        <div class="skeleton-avatar"></div>
-        <div class="skeleton-content">
-          <div class="skeleton-line short"></div>
-          <div class="skeleton-line medium"></div>
-          <div class="skeleton-line long"></div>
-        </div>
-      </div>
+    <div class="feed" id="feed">
+      <iframe class="feed-frame" id="feed-frame" title="内容" referrerpolicy="no-referrer" style="display:none;"></iframe>
+      <div class="feed-empty" id="feed-empty"></div>
     </div>
 
   </div>
 
+  <div class="modal-overlay" id="modal-overlay" hidden>
+    <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="modal-title">
+      <div class="modal-title" id="modal-title">音乐播放网址</div>
+      <input class="modal-input" id="modal-input" type="text" placeholder="https://… 或 ./music.mp3（留空 = 恢复原来的音乐）" autocomplete="off" />
+      <div class="modal-actions">
+        <button class="modal-btn" id="modal-cancel" type="button">取消</button>
+        <button class="modal-btn modal-confirm" id="modal-confirm" type="button">确认</button>
+      </div>
+    </div>
+  </div>
+
   <div class="toast" id="toast"></div>
+
+  <div class="boot-veil" id="boot-veil"></div>
 
   <div class="flag-wave" id="flag-wave"></div>
 
@@ -1131,16 +1253,27 @@
 
       let flagLocked = false;
       let waveStartTimer = null;
+      let leaving = false;
       let stopWeatherForLeave = null;
       let pauseBgmForLeave = null;
       let flagTapCount = 0;
       let flagTapTimer = null;
+      let profileData = null;   /* profile.json 的原始数据，供顶层的分享等逻辑使用 */
+      let tabLinks = {};
+
+      /* 只有国旗模式才拦滚轮；平时不挂非 passive 的 wheel 监听，避免拖慢滚动 */
+      const wheelLock = (e) => { if (e.cancelable) e.preventDefault(); };
+      const setWheelLock = (on) => {
+        if (on) document.addEventListener('wheel', wheelLock, { passive: false });
+        else document.removeEventListener('wheel', wheelLock);
+      };
 
       const canvasMain = document.getElementById('weather');
       const canvasBg = document.getElementById('weather-bg');
       const ctxMain = canvasMain ? canvasMain.getContext('2d') : null;
       const ctxBg = canvasBg ? canvasBg.getContext('2d') : null;
 
+      /* ---------- 视图缩放与基础工具 ---------- */
       const FIT_BASE = 411;
       const applyFit = () => {
         const w = window.innerWidth || FIT_BASE;
@@ -1148,8 +1281,7 @@
         document.documentElement.style.setProperty('--fit', z.toFixed(4));
       };
       applyFit();
-      window.addEventListener('resize', applyFit);
-      window.addEventListener('orientationchange', () => setTimeout(applyFit, 120));
+      /* resize / orientationchange 统一交给 applyOrientationGuard 处理，它内部会按需调用 applyFit */
 
       const safePath = (d) => (typeof d === 'string' && /^[MmZzLlHhVvCcSsQqTtAa0-9.,\s+-]+$/.test(d)) ? d : '';
 
@@ -1160,6 +1292,53 @@
         const v = u.trim();
         if (!/^(https?:\/\/|\.\/)/i.test(v)) return '';
         return v.replace(/['"()\\]/g, '');
+      };
+
+      /* 从 profile.json 取值：缺失/空串时用默认值 */
+      const pickText = (key, fallback) => {
+        const v = profileData ? profileData[key] : undefined;
+        return (typeof v === 'string' && v.trim()) ? v : fallback;
+      };
+      const pickNum = (key, fallback) => {
+        const v = profileData ? profileData[key] : undefined;
+        return (typeof v === 'number' && isFinite(v)) ? v : fallback;
+      };
+      const pickBool = (key, fallback) => {
+        const v = profileData ? profileData[key] : undefined;
+        return (typeof v === 'boolean') ? v : fallback;
+      };
+
+      /* 本地记忆：所有选项都记在 localStorage（file:// 等环境自动降级为不记忆） */
+      const store = {
+        get(key) { try { return localStorage.getItem(key); } catch (e) { return null; } },
+        set(key, val) { try { localStorage.setItem(key, val); } catch (e) {} }
+      };
+
+      /* rAF 节流：一帧内多次触发只跑一次 */
+      const rafThrottle = (fn) => {
+        let pending = false;
+        return () => {
+          if (pending) return;
+          pending = true;
+          requestAnimationFrame(() => { pending = false; fn(); });
+        };
+      };
+
+      /* 带超时的 JSON 拉取 */
+      const fetchJson = (url, ms) => {
+        const ctl = (typeof AbortController !== 'undefined') ? new AbortController() : null;
+        const timer = ctl ? setTimeout(() => ctl.abort(), ms || 8000) : 0;
+        return fetch(url, { signal: ctl ? ctl.signal : undefined })
+          .then((r) => (r.ok ? r.json() : Promise.reject(new Error('HTTP ' + r.status))))
+          .finally(() => { if (timer) clearTimeout(timer); });
+      };
+
+      /* profile.json 容错：字段类型不对也能渲染而不是整页崩掉 */
+      const sanitizeProfile = (d) => {
+        const out = (d && typeof d === 'object') ? d : {};
+        if (!Array.isArray(out.socials)) out.socials = [];
+        if (!out.tabLinks || typeof out.tabLinks !== 'object') out.tabLinks = {};
+        return out;
       };
 
       const SVG_NS = 'http://www.w3.org/2000/svg';
@@ -1228,15 +1407,50 @@
         });
       };
 
+      /* ---------- 标签页 ---------- */
       const tabItems = document.querySelectorAll('.tab-item');
+
+      /* tab 地址：填完整网址直接用；填英文名（intro / ./intro/）就自动拼到 tab_base_url 后面 */
+      const resolveTabUrl = (raw) => {
+        const v = String(raw || '').trim();
+        const direct = safeUrl(v);
+        if (direct) return direct;
+        const name = v.replace(/^\.\//, '').replace(/^\/+/, '').replace(/\/+$/, '');
+        if (!name) return '';
+        const base = String((profileData && profileData.tab_base_url) || '').trim();
+        if (!base) return '';
+        return safeUrl(base).replace(/\/+$/, '') + '/' + name + '/';
+      };
+
+      const showTabPanel = (key, links) => {
+        const frame = document.getElementById('feed-frame');
+        const empty = document.getElementById('feed-empty');
+        if (!frame || !empty) return;
+        const raw = links && typeof links[key] === 'string' ? links[key].trim() : '';
+        const url = resolveTabUrl(raw);
+
+        if (url) {
+          if (frame.getAttribute('src') !== url) frame.src = url;
+          frame.style.display = 'block';
+          empty.style.display = 'none';
+        } else {
+          frame.removeAttribute('src');
+          frame.style.display = 'none';
+          empty.textContent = '这一栏还没有配置网址';
+          empty.style.display = 'block';
+        }
+      };
+
       tabItems.forEach((tab) => {
         tab.addEventListener('click', () => {
           if (tab.classList.contains('active')) return;
           tabItems.forEach((t) => t.classList.remove('active'));
           tab.classList.add('active');
+          showTabPanel(tab.dataset.tab, tabLinks);
         });
       });
 
+      /* ---------- 社交链接 ---------- */
       const socialBox = document.getElementById('social-links');
       const socialToggle = document.getElementById('social-toggle');
 
@@ -1245,6 +1459,7 @@
         const open = socialBox.classList.toggle('expanded');
         socialToggle.setAttribute('aria-expanded', open ? 'true' : 'false');
         socialToggle.setAttribute('aria-label', open ? '收起更多' : '展开更多');
+        store.set('bgm-socials', open ? '1' : '0');
       });
 
       const renderSocials = (list) => {
@@ -1308,6 +1523,7 @@
         toggle.style.display = bottomRow.children.length ? 'flex' : 'none';
       };
 
+      /* ---------- 分享与复制 ---------- */
       const shareBtn = document.getElementById('share-btn');
       let shareUrl = location.href;
 
@@ -1365,9 +1581,10 @@
 
       const sharePayload = () => {
         const govLink = document.documentElement.classList.contains('flag-mode');
+        const d = profileData || {};
         return {
           title: govLink ? '中国政府网' : document.title,
-          text: govLink ? '中华人民共和国' : (data.display_name || '') + ' ' + (data.handle || ''),
+          text: govLink ? '中华人民共和国' : String(d.display_name || '') + ' ' + String(d.handle || ''),
           url: shareTarget()
         };
       };
@@ -1389,6 +1606,7 @@
         fallbackCopy();
       });
 
+      /* ---------- 全屏与屏幕方向 ---------- */
       const fsBtn = document.getElementById('fullscreen-btn');
 
       const isFullscreen = () => !!(
@@ -1399,9 +1617,11 @@
 
       const lockPortrait = () => {
         try {
-          if (screen.orientation && screen.orientation.lock) {
-            const p = screen.orientation.lock('portrait');
-            if (p && typeof p.catch === 'function') p.catch(() => {});
+          const o = window.screen && screen.orientation;
+          if (!o || typeof o.lock !== 'function') return;
+          const p = o.lock('portrait');
+          if (p && typeof p.then === 'function') {
+            p.catch(() => {});
           }
         } catch (e) {  }
       };
@@ -1414,20 +1634,44 @@
         } catch (e) {}
       };
 
+      /* 只在手机这类触屏设备上强制竖屏；桌面保持 411px 竖屏列居中，不旋转 */
+      const isTouchDevice = () => {
+        const coarse = window.matchMedia && window.matchMedia('(pointer: coarse)').matches;
+        return (navigator.maxTouchPoints > 0 || coarse) && !(window.matchMedia && window.matchMedia('(hover: hover) and (pointer: fine)').matches);
+      };
+
       const applyOrientationGuard = () => {
         const root = document.documentElement;
         const landscape = window.innerWidth > window.innerHeight;
-        if (isFullscreen() && landscape) {
+        if (landscape && isTouchDevice()) {
           root.classList.add('force-portrait');
+          /* 旋转之后可视宽度变成视口高度，缩放基准要跟着换，否则内容会被裁掉 */
+          const z = Math.max(0.7, Math.min(1.6, (window.innerHeight || 411) / 411));
+          root.style.setProperty('--fit', z.toFixed(4));
+          lockPortrait();
         } else {
           root.classList.remove('force-portrait');
+          if (typeof applyFit === 'function') applyFit();
         }
       };
 
-      window.addEventListener('resize', applyOrientationGuard);
+      applyOrientationGuard();
+
+      const guardTick = rafThrottle(applyOrientationGuard);
+      window.addEventListener('resize', guardTick);
       window.addEventListener('orientationchange', () => {
-        setTimeout(applyOrientationGuard, 150);
+        setTimeout(guardTick, 60);
+        setTimeout(guardTick, 150);
+        setTimeout(guardTick, 500);
       });
+      document.addEventListener('visibilitychange', () => {
+        if (!document.hidden) applyOrientationGuard();
+      });
+      if (window.matchMedia) {
+        const mq = window.matchMedia('(orientation: landscape)');
+        if (mq.addEventListener) mq.addEventListener('change', applyOrientationGuard);
+        else if (mq.addListener) mq.addListener(applyOrientationGuard);
+      }
 
       const scheduleGuard = () => {
         applyOrientationGuard();
@@ -1475,21 +1719,30 @@
       document.addEventListener('webkitfullscreenchange', updateFsButton);
       document.addEventListener('MSFullscreenChange', updateFsButton);
 
-      const svgPromise = fetch('./profilesvg.json')
-        .then((r) => (r.ok ? r.json() : {}))
-        .catch(() => ({}));
+      /* ---------- 数据加载（profile.json + profilesvg.json）---------- */
+      const svgPromise = fetchJson('./profilesvg.json', 8000).catch(() => ({}));
 
-      const dataPromise = fetch('./profile.json')
-        .then((response) => {
-          if (!response.ok) throw new Error('Network response was not ok');
-          return response.json();
-        });
+      const dataPromise = fetchJson('./profile.json', 8000)
+        .catch(() => fetchJson('./profile.json', 12000));
 
       Promise.all([dataPromise, svgPromise])
-        .then(([data, svg]) => {
-          applyTheme(data.theme);
+        .then(([rawData, svg]) => {
+          const data = sanitizeProfile(rawData);
+          profileData = data;
+
+          const savedTheme = store.get('bgm-theme');
+          const startNight = savedTheme !== null
+            ? savedTheme === 'night'
+            : (data.theme_default || 'night') !== 'day';
+          applyTheme(startNight ? data.theme : (data.themeLight || data.theme));
+          document.documentElement.classList.toggle('day', !startNight);
+          if (data.page_title) document.title = String(data.page_title);
 
           if (data.share_url) shareUrl = data.share_url;
+
+          tabLinks = data.tabLinks || {};
+          const firstTab = document.querySelector('.tab-item.active');
+          if (firstTab) showTabPanel(firstTab.dataset.tab, tabLinks);
 
           document.getElementById('display-name').textContent = data.display_name || '';
           document.getElementById('user-handle').textContent = data.handle || '';
@@ -1508,7 +1761,6 @@
           let waveTimer = null;
           let waveMaskTimer = null;
 
-
           if (flagBox) {
             flagBox.addEventListener('click', (e) => {
               e.stopPropagation();
@@ -1516,7 +1768,7 @@
 
               flagTapCount += 1;
               if (flagTapCount < 2) {
-                showToast('中华人民共和国万岁 世界人民大团结万岁', 1600, true);
+                showToast(pickText('flag_toast', '中华人民共和国万岁 世界人民大团结万岁'), 1600, true);
                 clearTimeout(flagTapTimer);
                 flagTapTimer = setTimeout(() => { flagTapCount = 0; }, 1600);
                 return;
@@ -1546,15 +1798,17 @@
               const handleEl = document.getElementById('user-handle');
               const birthEl = document.getElementById('meta-birth');
               const linkEl = document.getElementById('meta-link');
-              if (nameEl) nameEl.textContent = '中华人民共和国';
-              if (handleEl) handleEl.textContent = '@1949.10.1';
-              if (birthEl) birthEl.textContent = '成立于1949年10月1日';
+              if (nameEl) nameEl.textContent = pickText('flag_name', '中华人民共和国');
+              if (handleEl) handleEl.textContent = pickText('flag_handle', '@1949.10.1');
+              if (birthEl) birthEl.textContent = pickText('flag_birth', '成立于1949年10月1日');
               document.documentElement.classList.add('flag-mode');
+              syncIframeState();
               if (linkEl) {
-                linkEl.href = 'https://www.gov.cn';
-                linkEl.textContent = 'www.gov.cn';
+                linkEl.href = pickText('flag_link', 'https://www.gov.cn');
+                linkEl.textContent = pickText('flag_link_text', 'www.gov.cn');
               }
               flagLocked = true;
+              setWheelLock(true);
               if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
               particles = [];
               clearAll();
@@ -1570,18 +1824,17 @@
               }
               const sectionEl = document.querySelector('.profile-section');
               if (sectionEl) sectionEl.classList.add('flag-open');
-              const wrapEl2 = document.querySelector('.profile-banner-wrap');
-              if (wrapEl2) {
-                const bw2 = wrapEl2.getBoundingClientRect().width;
+              const bannerWrapEl = document.querySelector('.profile-banner-wrap');
+              if (bannerWrapEl) {
+                const bw2 = bannerWrapEl.getBoundingClientRect().width;
                 const flagH = Math.max(120, Math.round(bw2 / 1.5));
-                wrapEl2.style.transition = 'height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
-                wrapEl2.style.height = flagH + 'px';
+                bannerWrapEl.style.transition = 'height 0.45s cubic-bezier(0.22, 0.61, 0.36, 1)';
+                bannerWrapEl.style.height = flagH + 'px';
               }
               clearTimeout(waveMaskTimer);
               waveMaskTimer = setTimeout(() => {
-                const w2 = document.querySelector('.profile-banner-wrap');
-                if (w2 && flagWave) {
-                  flagWave.style.setProperty('--wave-top', Math.round(w2.getBoundingClientRect().bottom) + 'px');
+                if (bannerWrapEl && flagWave) {
+                  flagWave.style.setProperty('--wave-top', Math.round(bannerWrapEl.getBoundingClientRect().bottom) + 'px');
                 }
               }, 480);
 
@@ -1590,10 +1843,8 @@
                 flagWave.style.setProperty('--fx', (r.left + r.width / 2).toFixed(1) + 'px');
                 flagWave.style.setProperty('--fy', (r.top + r.height / 2).toFixed(1) + 'px');
                 flagWave.style.setProperty('--wave-color', (data.themeRed && data.themeRed.bg) || '#c8102e');
-                const wrapEl = document.querySelector('.profile-banner-wrap');
-                if (wrapEl) {
-                  const wr = wrapEl.getBoundingClientRect();
-                  const fh = Math.max(120, Math.round(wrapEl ? wrapEl.getBoundingClientRect().width / 1.5 : 274));
+                if (bannerWrapEl) {
+                  const fh = Math.max(120, Math.round(bannerWrapEl.getBoundingClientRect().width / 1.5));
                   flagWave.style.setProperty('--wave-top', fh.toFixed(0) + 'px');
                 }
                 clearTimeout(waveStartTimer);
@@ -1604,6 +1855,7 @@
                 waveTimer = setTimeout(() => {
                   flagWave.classList.remove('on');
                   flagLocked = false;
+                  setWheelLock(false);
                   particles = [];
                   startWeather();
 
@@ -1615,6 +1867,7 @@
                     document.documentElement.classList.add('glass');
                     if (btnGlass) btnGlass.classList.add('on');
                   }
+                  syncIframeState();
                   if (wasPlaying && bgmEl) {
                     const pb = bgmEl.play();
                     if (pb && pb.catch) pb.catch(() => {});
@@ -1640,11 +1893,11 @@
                   }
                   if (sectionEl) sectionEl.classList.remove('flag-open');
                   const w3 = document.querySelector('.profile-banner-wrap');
-                  if (w3) w3.style.height = '160px';
+                  if (w3) w3.style.height = baseHeight + 'px';
                 }, 3000);
               }
 
-              showToast('中华人民共和国万岁 世界人民大团结万岁', 3000, true);
+              showToast(pickText('flag_toast', '中华人民共和国万岁 世界人民大团结万岁'), 3000, true);
             });
           }
 
@@ -1652,7 +1905,7 @@
           const bioEl = document.getElementById('profile-bio');
           const bioMore = document.getElementById('profile-bio-more');
           const bioToggle = document.getElementById('bio-toggle');
-          const BIO_LIMIT = 15;
+          const BIO_LIMIT = pickNum('bio_limit', 15);
           const fullBio = data.bio || '';
           const moreBio = data.bio_more || '';
           let bioExpanded = false;
@@ -1672,13 +1925,13 @@
             bioToggle.setAttribute('aria-label', bioExpanded ? '收起简介' : '展开简介');
           };
 
-          const CORE_VALUES = '富强 民主 文明 和谐 自由 平等 公正 法治 爱国 敬业 诚信 友善';
+          const CORE_VALUES = pickText('flag_values', '富强 民主 文明 和谐 自由 平等 公正 法治 爱国 敬业 诚信 友善');
 
           const bioSwap = (text) => {
             if (!bioEl) return;
-            bioEl.style.opacity = '';
             if (text === null) {
               renderBio();
+          if (store.get('bgm-bio') === '1') { bioExpanded = true; renderBio(); }
               bioMore.classList.remove('show');
             } else {
               bioEl.textContent = text;
@@ -1690,15 +1943,20 @@
           bioToggle.addEventListener('click', () => {
             bioExpanded = !bioExpanded;
             renderBio();
+            store.set('bgm-bio', bioExpanded ? '1' : '0');
           });
 
           renderBio();
+          if (store.get('bgm-bio') === '1') { bioExpanded = true; renderBio(); }
+          if (store.get('bgm-bio') === '1') { bioExpanded = true; renderBio(); }
 
-          if (data.link_url) {
+          const linkHref = safeUrl(data.link_url);
+          if (linkHref) {
             const linkContainer = document.getElementById('meta-link-container');
             const linkEl = document.getElementById('meta-link');
-            linkEl.href = data.link_url;
+            linkEl.href = linkHref;
             linkEl.textContent = data.link_text || data.link_url;
+            linkEl.rel = 'noopener noreferrer';
             linkContainer.style.display = 'flex';
           }
 
@@ -1714,43 +1972,161 @@
             joinContainer.style.display = 'flex';
           }
 
-
           SVG_DATA = svg || {};
           applySvg();
           renderSocials(data.socials);
-
-          if (data.bgm_url) {
-            const bgm = document.getElementById('bgm');
-            if (bgm) {
-              bgm.src = data.bgm_url;
-              bgm.loop = true;
-              bgm.volume = typeof data.bgm_volume === 'number' ? Math.min(1, Math.max(0, data.bgm_volume)) : 0.6;
-
-              const startBgm = () => {
-                const p = bgm.play();
-                if (p && typeof p.then === 'function') {
-                  p.then(() => {
-                    setIcon(btnMusic, 'musicOn');
-                    ['touchstart', 'click', 'keydown'].forEach((ev) => {
-                      document.removeEventListener(ev, unlockBgm);
-                    });
-                  }).catch(() => {
-                    setIcon(btnMusic, 'musicOff');
-                  });
-                }
-              };
-
-              const unlockBgm = () => {
-                startBgm();
-              };
-
-              startBgm();
-              ['touchstart', 'click', 'keydown'].forEach((ev) => {
-                document.addEventListener(ev, unlockBgm, { passive: true });
-              });
-            }
+          if (store.get('bgm-socials') === '1') {
+            socialBox.classList.add('expanded');
+            socialToggle.setAttribute('aria-expanded', 'true');
+            socialToggle.setAttribute('aria-label', '收起更多');
           }
 
+          /* ---------- 背景音乐：仿 Audio Test —— 多源逐个尝试 + 打开即自动播放 ---------- */
+          const bgmNode = document.getElementById('bgm');
+
+          /* 自定义音乐网址（弹窗里确认后生效）：有值就只播它；清空则恢复原来的音乐 */
+          let bgmCustomUrl = (() => {
+            let v = '';
+            try { v = localStorage.getItem('bgm-music-url') || ''; } catch (e) {  }
+            v = String(v).trim();
+            return /^(https?:\/\/|\.\/)/i.test(v) ? v : '';
+          })();
+
+          /* 加速源顺序 = 尝试顺序；有自定义网址时它独占列表。
+             profile.json 的 bgm_channels 优先，末尾自动把 bgm_url 原站当兜底；
+             上次播成功的源会记到 localStorage，下次直接排到最前。 */
+          const buildBgmChannels = () => {
+            if (bgmCustomUrl) return [bgmCustomUrl];
+            const list = Array.isArray(data.bgm_channels)
+              ? data.bgm_channels.filter((u) => typeof u === 'string' && /^https?:\/\//i.test(u.trim())).map((u) => u.trim())
+              : [];
+            const direct = String(data.bgm_url || '').trim();
+            if (direct && list.indexOf(direct) === -1) list.push(direct);
+            try {
+              const saved = localStorage.getItem('bgm-channel');
+              const k = saved ? list.indexOf(saved) : -1;
+              if (k > 0) { list.splice(k, 1); list.unshift(saved); }
+            } catch (e) {  }
+            return list;
+          };
+          let bgmChannelList = buildBgmChannels();
+
+          const BGM_START_TIMEOUT = 15000;  /* 一个源 15 秒完全没数据才算死；CDN 首字节慢不代表坏 */
+          const BGM_STALL_TIMEOUT = 12000;  /* 播放中卡 12 秒换下一个，并从原进度续播 */
+
+          let bgmIdx = 0;
+          let bgmStarted = false;
+          let bgmTimer = 0;
+          let bgmStallTimer = 0;
+          let bgmToastAt = 0;
+
+          const bgmToast = (text, ms) => {
+            const now = Date.now();
+            if (now - bgmToastAt < 1200) return;
+            bgmToastAt = now;
+            showToast(text, ms || 2600);
+          };
+
+          const bgmClearTimers = () => {
+            if (bgmTimer) { clearTimeout(bgmTimer); bgmTimer = 0; }
+            if (bgmStallTimer) { clearTimeout(bgmStallTimer); bgmStallTimer = 0; }
+          };
+
+          const bgmAttemptPlay = () => {
+            if (!bgmNode || !bgmNode.src) return;
+            const p = bgmNode.play();
+            /* 自动播放被拦会走 NotAllowedError：不换源，数据继续加载，等下一次手势补播放；
+               图标此时应停在「可播放」（musicOff）状态。其它错误由 error 事件统一换源。 */
+            if (p && typeof p.catch === 'function') p.catch((err) => {
+              if (err && err.name === 'NotAllowedError' && !bgmStarted) setIcon(btnMusic, 'musicOff');
+            });
+          };
+
+          const bgmTryNext = (resumeAt) => {
+            if (!bgmNode) return;
+            if (bgmIdx >= bgmChannelList.length) {
+              bgmClearTimers();
+              setIcon(btnMusic, 'musicOff');
+              bgmToast('音乐加载失败：所有加速源都不可用', 4000);
+              return;
+            }
+            bgmNode.src = bgmChannelList[bgmIdx];
+            bgmIdx += 1;
+            bgmClearTimers();
+            if (resumeAt) {
+              bgmNode.addEventListener('loadedmetadata', () => {
+                try { bgmNode.currentTime = resumeAt; } catch (e) {  }
+              }, { once: true });
+            }
+            try { bgmNode.load(); } catch (e) {  }
+
+            /* 一个源 6 秒没任何数据就换下一个（数据慢但已经来了就不换） */
+            bgmTimer = setTimeout(() => {
+              bgmTimer = 0;
+              if (bgmStarted || bgmNode.readyState >= 2) return;
+              bgmToast('加速源 ' + bgmIdx + ' 没响应，换下一个', 1600);
+              bgmTryNext(0);
+            }, BGM_START_TIMEOUT);
+
+            bgmAttemptPlay();
+          };
+
+          if (bgmNode && bgmChannelList.length) {
+            bgmNode.loop = true;
+            bgmNode.volume = typeof data.bgm_volume === 'number' ? Math.min(1, Math.max(0, data.bgm_volume)) : 0.6;
+
+            bgmNode.addEventListener('playing', () => {
+              bgmStarted = true;
+              bgmClearTimers();
+              setIcon(btnMusic, 'musicOn');
+              btnMusic.setAttribute('aria-label', '暂停音乐');
+              try { localStorage.setItem('bgm-channel', bgmNode.src); } catch (e) {  }
+              ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((ev) => {
+                document.removeEventListener(ev, unlockBgm);
+              });
+            });
+
+            bgmNode.addEventListener('pause', () => {
+              if (!bgmNode.ended) {
+                setIcon(btnMusic, 'musicOff');
+                btnMusic.setAttribute('aria-label', '播放音乐');
+              }
+            });
+
+            bgmNode.addEventListener('error', () => {
+              if (bgmStarted) return;
+              bgmToast('加速源 ' + bgmIdx + ' 出错，换下一个', 1400);
+              bgmTryNext(0);
+            });
+
+            /* 播放中卡住（网速不够）也自动换源，并从当前进度续上 */
+            bgmNode.addEventListener('waiting', () => {
+              if (!bgmStarted || bgmStallTimer) return;
+              bgmStallTimer = setTimeout(() => {
+                bgmStallTimer = 0;
+                const at = bgmNode.currentTime || 0;
+                if (bgmIdx < bgmChannelList.length) {
+                  bgmStarted = false;
+                  bgmToast('播放卡顿，切换加速源续播', 1800);
+                  bgmTryNext(at);
+                }
+              }, BGM_STALL_TIMEOUT);
+            });
+            bgmNode.addEventListener('timeupdate', () => {
+              if (bgmStallTimer) { clearTimeout(bgmStallTimer); bgmStallTimer = 0; }
+            });
+
+            /* 自动播放被拦时，任何一次手势都补一次播放 */
+            const unlockBgm = () => { if (!bgmStarted) bgmAttemptPlay(); };
+            ['pointerdown', 'touchstart', 'click', 'keydown'].forEach((ev) => {
+              document.addEventListener(ev, unlockBgm, { passive: true });
+            });
+
+            /* 初始先显示「可播放」图标：自动播放成功会被 playing 事件翻成「播放中」 */
+            setTimeout(() => setIcon(btnMusic, 'musicOff'), 0);
+            bgmTryNext(0);   /* 打开页面立即开始尝试自动播放 */
+          }
+          /* ---------- 工具栏按钮 ---------- */
           const setIcon = (el, key) => {
             if (!el) return;
             const svg = el.querySelector('svg');
@@ -1765,32 +2141,93 @@
           const btnTheme = document.getElementById('btn-theme');
           const btnGlass = document.getElementById('btn-glass');
 
+          /* 音乐按钮：能播就显示「播放中」图标；自动播放被拦时显示「可播放」图标，
+             点一下补播放；播放中再点就暂停。全部源失败过的话，再点会从头重试一遍。 */
           btnMusic.addEventListener('click', () => {
             if (!bgmEl) return;
-            if (bgmEl.paused) {
-              const p = bgmEl.play();
-              if (p && p.catch) p.catch(() => {});
-              setIcon(btnMusic, 'musicOn');
-              showToast('音乐已播放');
-            } else {
+            if (!bgmEl.paused) {
               bgmEl.pause();
               setIcon(btnMusic, 'musicOff');
-              showToast('音乐已暂停');
+              showToast('音乐已暂停', 1400);
+              return;
+            }
+            if (bgmIdx >= bgmChannelList.length) {
+              bgmIdx = 0;
+              bgmTryNext(0);
+            }
+            const p = bgmEl.play();
+            if (p && typeof p.then === 'function') {
+              p.then(() => setIcon(btnMusic, 'musicOn')).catch(() => {});
             }
           });
 
           btnReplay.addEventListener('click', () => {
             if (!bgmEl) return;
+            if (bgmIdx >= bgmChannelList.length) bgmIdx = 0;
             try { bgmEl.currentTime = 0; } catch (e) {}
             const p = bgmEl.play();
-            if (p && p.catch) p.catch(() => {});
-            setIcon(btnMusic, 'musicOn');
-            showToast('已从头重新播放');
+            if (p && typeof p.then === 'function') {
+              p.then(() => setIcon(btnMusic, 'musicOn')).catch(() => {});
+            }
           });
 
+          /* ---------- 音乐网址弹窗 ---------- */
+          const modalOverlay = document.getElementById('modal-overlay');
+          const modalInput = document.getElementById('modal-input');
+          const btnMusicUrl = document.getElementById('btn-music-url');
+
+          const closeMusicUrlModal = () => { if (modalOverlay) modalOverlay.hidden = true; };
+
+          const applyCustomMusic = () => {
+            bgmIdx = 0;
+            bgmStarted = false;
+            bgmClearTimers();
+            bgmChannelList = buildBgmChannels();
+            bgmTryNext(0);
+          };
+
+          btnMusicUrl.addEventListener('click', () => {
+            if (!modalOverlay || !modalInput) return;
+            modalInput.value = bgmCustomUrl;
+            modalOverlay.hidden = false;
+            setTimeout(() => { try { modalInput.focus(); } catch (e) {  } }, 30);
+          });
+
+          document.getElementById('modal-cancel').addEventListener('click', closeMusicUrlModal);
+
+          document.getElementById('modal-confirm').addEventListener('click', () => {
+            const v = modalInput ? modalInput.value.trim() : '';
+            if (v === bgmCustomUrl) { closeMusicUrlModal(); return; }
+            if (!v) {
+              store.set('bgm-music-url', '');
+              bgmCustomUrl = '';
+              showToast('已恢复原来的音乐', 1800);
+            } else if (!/^(https?:\/\/|\.\/)/i.test(v)) {
+              showToast('网址格式不对：要以 http(s):// 或 ./ 开头', 2800);
+              return;
+            } else {
+              store.set('bgm-music-url', v);
+              bgmCustomUrl = v;
+              showToast('已切换音乐', 1800);
+            }
+            applyCustomMusic();
+            closeMusicUrlModal();
+          });
+
+          modalOverlay.addEventListener('click', (e) => {
+            if (e.target === modalOverlay) closeMusicUrlModal();
+          });
+
+          document.addEventListener('keydown', (e) => {
+            if (!modalOverlay || modalOverlay.hidden) return;
+            if (e.key === 'Escape') closeMusicUrlModal();
+            else if (e.key === 'Enter') document.getElementById('modal-confirm').click();
+          });
+
+          /* ---------- 天气粒子 ---------- */
           const WEATHER_SEQ = ['rain', 'snow', 'none', 'bgRain', 'bgSnow'];
-          let weatherMode = 'bgRain';
-          let weatherIndex = 3;
+          let weatherMode = WEATHER_SEQ.indexOf(String(data.weather_default || '')) >= 0 ? String(data.weather_default) : 'bgRain';
+          let weatherIndex = Math.max(0, WEATHER_SEQ.indexOf(weatherMode));
           let particles = [];
           let rafId = null;
 
@@ -1804,14 +2241,9 @@
 
           const setupCanvas = (c, ctx) => {
             if (!c || !ctx) return { W: 0, H: 0 };
+            syncCanvasSize(c, ctx);
             const rect = c.getBoundingClientRect();
-            const dpr = Math.min(window.devicePixelRatio || 1, 2);
-            const w = Math.max(1, Math.round(rect.width));
-            const h = Math.max(1, Math.round(rect.height));
-            c.width = Math.floor(w * dpr);
-            c.height = Math.floor(h * dpr);
-            ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-            return { W: w, H: h };
+            return { W: Math.max(1, Math.round(rect.width)), H: Math.max(1, Math.round(rect.height)) };
           };
 
           const buildParticles = (W, H) => {
@@ -1839,6 +2271,13 @@
             }
           };
 
+          /* 雨滴按透明度分桶批量描边：每帧 stroke 次数从「粒子数」降到 8 次，
+             同时避免每颗粒子每帧拼一次 rgba() 字符串（GC 抖动的主要来源）。 */
+          const RAIN_BUCKETS = 8;
+          const RAIN_ALPHA_STEP = 0.05;
+          const rainPaths = new Array(RAIN_BUCKETS);
+          const rainUsed = new Array(RAIN_BUCKETS);
+
           const drawWeather = () => {
             const c = activeCanvas();
             const ctx = activeCtx();
@@ -1848,22 +2287,38 @@
             const H = c.height / dprNow;
             ctx.clearRect(0, 0, W, H);
             const kind = kindOf();
+            const day = isDay();
             const col = kind === 'rain'
-              ? (isDay() ? '92,112,104' : '176,198,190')
-              : (isDay() ? '150,165,180' : '235,242,248');
-            for (let i = 0; i < particles.length; i++) {
-              const p = particles[i];
-              if (kind === 'rain') {
-                ctx.strokeStyle = 'rgba(' + col + ',' + p.a + ')';
-                ctx.lineWidth = 1;
-                ctx.beginPath();
-                ctx.moveTo(p.x, p.y);
-                ctx.lineTo(p.x - 1.4, p.y + p.len);
-                ctx.stroke();
+              ? (day ? '92,112,104' : '176,198,190')
+              : (day ? '150,165,180' : '235,242,248');
+
+            if (kind === 'rain') {
+              for (let b = 0; b < RAIN_BUCKETS; b++) {
+                rainPaths[b] = new Path2D();
+                rainUsed[b] = false;
+              }
+              for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
+                let b = Math.round(p.a / RAIN_ALPHA_STEP) - 1;
+                if (b < 0) b = 0;
+                else if (b > RAIN_BUCKETS - 1) b = RAIN_BUCKETS - 1;
+                const path = rainPaths[b];
+                path.moveTo(p.x, p.y);
+                path.lineTo(p.x - 1.4, p.y + p.len);
+                rainUsed[b] = true;
                 p.y += p.spd;
                 p.x -= 0.4;
                 if (p.y > H) { p.y = -p.len; p.x = Math.random() * W; }
-              } else {
+              }
+              ctx.lineWidth = 1;
+              for (let b = 0; b < RAIN_BUCKETS; b++) {
+                if (!rainUsed[b]) continue;
+                ctx.strokeStyle = 'rgba(' + col + ',' + ((b + 1) * RAIN_ALPHA_STEP).toFixed(2) + ')';
+                ctx.stroke(rainPaths[b]);
+              }
+            } else {
+              for (let i = 0; i < particles.length; i++) {
+                const p = particles[i];
                 ctx.fillStyle = 'rgba(' + col + ',' + p.a + ')';
                 ctx.beginPath();
                 ctx.arc(p.x, p.y, p.r, 0, 6.2832);
@@ -1903,18 +2358,32 @@
             rafId = requestAnimationFrame(drawWeather);
           };
 
-          const resizeWeather = () => {
-            clearAll();
-            setupCanvas(canvasMain, ctxMain);
-            setupCanvas(canvasBg, ctxBg);
-            const c = activeCanvas();
-            const ctx = activeCtx();
+          /* 画布尺寸统一由 ResizeObserver 驱动（视口变化 / 旋转 / 下拉拉伸都能兜住）。
+             雨雪是「从上往下落」，宽度变了才需要重建粒子；纯高度变化（下拉拉伸横幅）
+             只同步画布尺寸，避免拉伸过程中反复重排 200 多个雨滴造成掉帧。 */
+          let lastWeatherWidth = 0;
+          const handleCanvasResize = () => {
+            if (!canvasBg || !ctxBg) return;
+            const before = canvasBg.width + 'x' + canvasBg.height + '/' + (canvasMain ? canvasMain.width + 'x' + canvasMain.height : '');
+            syncCanvasSize(canvasBg, ctxBg);
+            syncCanvasSize(canvasMain, ctxMain);
+            const after = canvasBg.width + 'x' + canvasBg.height + '/' + (canvasMain ? canvasMain.width + 'x' + canvasMain.height : '');
+            if (before === after) return;
             if (kindOf() === 'none') return;
-            const size = setupCanvas(c, ctx);
-            buildParticles(size.W, size.H);
+            const rect = activeCanvas().getBoundingClientRect();
+            const w = Math.max(1, Math.round(rect.width));
+            if (Math.abs(w - lastWeatherWidth) < 2) return;
+            lastWeatherWidth = w;
+            buildParticles(w, Math.max(1, Math.round(rect.height)));
           };
 
-          window.addEventListener('resize', resizeWeather);
+          if (window.ResizeObserver) {
+            const ro = new ResizeObserver(handleCanvasResize);
+            if (canvasBg) ro.observe(canvasBg);
+            if (canvasMain) ro.observe(canvasMain);
+          } else {
+            window.addEventListener('resize', handleCanvasResize);
+          }
 
           const WEATHER_LABEL = {
             rain: '全屏下雨',
@@ -1935,29 +2404,82 @@
             startWeather();
           });
 
-          let isNight = true;
+          let isNight = (data.theme_default || 'night') !== 'day';
           btnTheme.addEventListener('click', () => {
             isNight = !isNight;
             applyTheme(isNight ? data.theme : (data.themeLight || data.theme));
             setIcon(btnTheme, isNight ? 'moon' : 'sun');
             document.documentElement.classList.toggle('day', !isNight);
+            store.set('bgm-theme', isNight ? 'night' : 'day');
+            syncIframeState();
             showToast(isNight ? '夜晚模式' : '白天模式');
           });
 
           btnGlass.addEventListener('click', () => {
             const on = document.documentElement.classList.toggle('glass');
             btnGlass.classList.toggle('on', on);
+            store.set('bgm-glass', on ? '1' : '0');
+            syncIframeState();
             showToast(on ? '玻璃效果已开启' : '玻璃效果已关闭');
           });
 
-          if (window.ResizeObserver) {
-            const ro = new ResizeObserver(() => {
-              syncCanvasSize(canvasBg, ctxBg);
-              syncCanvasSize(canvasMain, ctxMain);
-            });
-            ro.observe(canvasBg);
-            ro.observe(canvasMain);
+          const savedGlass = store.get('bgm-glass');
+          if (savedGlass !== null ? savedGlass === '1' : pickBool('glass_default', false)) {
+            document.documentElement.classList.add('glass');
+            btnGlass.classList.add('on');
           }
+
+          /* 按默认主题把白天/夜晚按钮图标摆正 */
+          setIcon(btnTheme, isNight ? 'moon' : 'sun');
+
+          /* ---------- 与标签页 iframe 同步界面状态（主题/玻璃/配色） ---------- */
+          const iframeState = () => {
+            const cs = getComputedStyle(document.documentElement);
+            const val = (name) => (cs.getPropertyValue(name) || '').trim();
+            return {
+              type: 'profile-state',
+              theme: document.documentElement.classList.contains('day') ? 'day' : 'night',
+              glass: document.documentElement.classList.contains('glass'),
+              flag: document.documentElement.classList.contains('flag-mode'),
+              palette: {
+                bg: val('--color-bg'),
+                text: val('--color-text'),
+                textMuted: val('--color-text-muted'),
+                border: val('--color-border'),
+                accent: val('--color-accent'),
+                skeleton: val('--color-skeleton'),
+                hover: val('--color-hover-tint')
+              }
+            };
+          };
+
+          const syncIframeState = () => {
+            const frame = document.getElementById('feed-frame');
+            if (!frame || !frame.contentWindow) return;
+            try { frame.contentWindow.postMessage(iframeState(), '*'); } catch (e) {  }
+          };
+
+          /* 子页面加载完会发 profile-state-request，这里回包 */
+          window.addEventListener('message', (e) => {
+            const d = e.data;
+            if (d && d.type === 'profile-state-request' && e.source && e.source.postMessage) {
+              try { e.source.postMessage(iframeState(), '*'); } catch (err) {  }
+            }
+          });
+
+          const feedFrameEl = document.getElementById('feed-frame');
+          if (feedFrameEl) feedFrameEl.addEventListener('load', syncIframeState);
+
+          syncIframeState();
+
+          /* 页面藏到后台时显式停掉粒子循环，回前台再续（省电） */
+          document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+              if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
+            } else if (kindOf() !== 'none' && !rafId && !flagLocked) {
+              rafId = requestAnimationFrame(drawWeather);
+            }
+          });
 
           stopWeatherForLeave = () => {
             if (rafId) { cancelAnimationFrame(rafId); rafId = null; }
@@ -1977,6 +2499,7 @@
           document.documentElement.style.setProperty('--glass-image', `url('${safeCssUrl(data.background_image_url) || './profilebg.png'}')`);
           startWeather();
 
+          /* ---------- 图片预加载（低清先上、高清后补）---------- */
           const preloadImage = (url) => new Promise((resolve) => {
             if (!url) { resolve(null); return; }
             const im = new Image();
@@ -1988,29 +2511,38 @@
           const loadPictures = async () => {
             const bannerEl = document.getElementById('profile-banner');
             const avatarEl = document.getElementById('profile-avatar');
+            const lowBgUrl = safeCssUrl(data.background_low_url);
+            const lowAvUrl = safeCssUrl(data.avatar_low_url);
+            const hdBgUrl = safeCssUrl(data.background_image_url);
+            const hdAvUrl = safeCssUrl(data.avatar_image_url);
 
-            const lowBg = await preloadImage(data.background_low_url);
-            if (lowBg && bannerEl) bannerEl.style.backgroundImage = `url('${data.background_low_url}')`;
+            /* 先并行拿两张低清占位，再并行换高清，别一个个串着等 */
+            const [lowBg, lowAv] = await Promise.all([
+              preloadImage(lowBgUrl),
+              preloadImage(lowAvUrl)
+            ]);
+            if (lowBg && bannerEl) bannerEl.style.backgroundImage = `url('${lowBgUrl}')`;
+            if (lowAv && avatarEl) avatarEl.style.backgroundImage = `url('${lowAvUrl}')`;
 
-            const lowAv = await preloadImage(data.avatar_low_url);
-            if (lowAv && avatarEl) avatarEl.style.backgroundImage = `url('${data.avatar_low_url}')`;
+            const [hdBg, hdAv] = await Promise.all([
+              preloadImage(hdBgUrl),
+              preloadImage(hdAvUrl)
+            ]);
 
-            const hdBg = await preloadImage(data.background_image_url);
             if (hdBg && bannerEl) {
-              const apply = () => {
-                bannerEl.style.setProperty('--banner-src', `url('${safeCssUrl(data.background_image_url)}')`);
+              const applyBg = () => {
+                bannerEl.style.setProperty('--banner-src', `url('${hdBgUrl}')`);
                 bannerEl.classList.add('has-remote');
               };
-              if (hdBg.decode) hdBg.decode().then(apply).catch(apply); else apply();
+              if (hdBg.decode) hdBg.decode().then(applyBg).catch(applyBg); else applyBg();
             }
 
-            const hdAv = await preloadImage(data.avatar_image_url);
             if (hdAv && avatarEl) {
-              const apply = () => {
-                avatarEl.style.setProperty('--avatar-src', `url('${safeCssUrl(data.avatar_image_url)}')`);
+              const applyAv = () => {
+                avatarEl.style.setProperty('--avatar-src', `url('${hdAvUrl}')`);
                 avatarEl.classList.add('has-remote');
               };
-              if (hdAv.decode) hdAv.decode().then(apply).catch(apply); else apply();
+              if (hdAv.decode) hdAv.decode().then(applyAv).catch(applyAv); else applyAv();
             }
           };
 
@@ -2021,6 +2553,49 @@
           document.getElementById('display-name').textContent = '数据加载失败';
         });
 
+      /* ---------- 启动遮罩 + 从 bfcache 返回时的状态恢复 ---------- */
+      const playBoot = () => {
+        const veil = document.getElementById('boot-veil');
+        if (!veil) return;
+        veil.style.animation = 'none';
+        void veil.offsetWidth;
+        veil.style.animation = '';
+      };
+
+      const restorePage = () => {
+        const root = document.documentElement;
+        root.classList.remove('leaving', 'flag-mode', 'red-theme', 'glass');
+        const bw = document.querySelector('.profile-banner-wrap');
+        if (bw) bw.style.height = '';
+        const sec = document.querySelector('.profile-section');
+        if (sec) sec.classList.remove('flag-open');
+        const overlay = document.getElementById('flag-overlay');
+        if (overlay) { overlay.classList.remove('on'); overlay.style.opacity = '0'; }
+        const wave = document.getElementById('flag-wave');
+        if (wave) wave.classList.remove('on');
+        const hint = document.getElementById('pull-hint');
+        if (hint) hint.style.opacity = '0';
+        const banner = document.getElementById('profile-banner');
+        if (banner) {
+          banner.style.filter = 'blur(0px)';
+          banner.style.setProperty('--pull-scale', '1');
+        }
+        flagLocked = false;
+        leaving = false;
+        flagTapCount = 0;
+        setWheelLock(false);
+        applyOrientationGuard();
+      };
+
+      window.addEventListener('pageshow', (e) => {
+        if (!e.persisted) return;
+        restorePage();
+        playBoot();
+      });
+
+      playBoot();
+
+      /* ---------- 重力倾斜（仅手机，静下来就停帧）---------- */
       const TILT_MAX_X = 14;
       const TILT_MAX_Y = 14;
       let tiltRawX = 0, tiltRawY = 0;
@@ -2031,6 +2606,7 @@
       let tiltOn = false;
       let tiltLastTime = 0;
       let tiltSetX = 0, tiltSetY = 0;
+      const tiltBanner = document.getElementById('profile-banner');
 
       const TILT_STIFF = 0.05;
       const TILT_DAMP = 0.78;
@@ -2055,18 +2631,20 @@
         tiltCurX += tiltVelX * step;
         tiltCurY += tiltVelY * step;
 
-        if (Math.abs(tiltVelX) < 0.0004 && Math.abs(tiltTargetX - tiltCurX) < 0.0004) {
+        const settledX = Math.abs(tiltVelX) < 0.0004 && Math.abs(tiltTargetX - tiltCurX) < 0.0004;
+        const settledY = Math.abs(tiltVelY) < 0.0004 && Math.abs(tiltTargetY - tiltCurY) < 0.0004;
+        if (settledX) {
           tiltVelX = 0;
           tiltCurX = tiltTargetX;
         }
-        if (Math.abs(tiltVelY) < 0.0004 && Math.abs(tiltTargetY - tiltCurY) < 0.0004) {
+        if (settledY) {
           tiltVelY = 0;
           tiltCurY = tiltTargetY;
         }
 
         const nx = easeTilt(tiltCurX) * TILT_MAX_X;
         const ny = easeTilt(tiltCurY) * TILT_MAX_Y;
-        const bannerEl = document.getElementById('profile-banner');
+        const bannerEl = tiltBanner;   /* 缓存引用，避免每帧查 DOM */
         if (bannerEl) {
           if (Math.abs(nx - tiltSetX) > 0.05) {
             bannerEl.style.setProperty('--tilt-x', nx.toFixed(2) + 'px');
@@ -2077,6 +2655,16 @@
             tiltSetY = ny;
           }
         }
+
+        /* 完全静下来就停掉这一帧循环，等下一次重力感应数据再启动，避免手机上空转 60fps */
+        const idle = settledX && settledY
+          && Math.abs(tiltRawX - tiltTargetX) < 0.002
+          && Math.abs(tiltRawY - tiltTargetY) < 0.002;
+        if (idle) {
+          tiltRaf = null;
+          tiltLastTime = 0;
+          return;
+        }
         tiltRaf = requestAnimationFrame(tiltLoop);
       };
 
@@ -2085,6 +2673,10 @@
         const beta = typeof e.beta === 'number' ? e.beta : 90;
         tiltRawX = Math.max(-1, Math.min(1, -gamma / 30));
         tiltRawY = Math.max(-1, Math.min(1, (beta - 90) / 45));
+        if (tiltOn && !tiltRaf && !document.hidden) {
+          tiltLastTime = 0;
+          tiltRaf = requestAnimationFrame(tiltLoop);
+        }
       };
 
       const enableTilt = () => {
@@ -2116,92 +2708,111 @@
         }
       });
 
+      /* ---------- 鼠标倾斜（桌面）：把陀螺仪效果绑到鼠标位置，幅度与陀螺仪一致 ---------- */
+      (() => {
+        const finePointer = window.matchMedia
+          && window.matchMedia('(hover: hover) and (pointer: fine)').matches;
+        const reduced = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (!finePointer || reduced) return;
+
+        let tgtX = 0, tgtY = 0;
+        let curX = 0, curY = 0;
+        let raf = null;
+
+        const tick = () => {
+          curX += (tgtX - curX) * 0.06;
+          curY += (tgtY - curY) * 0.06;
+          const idle = Math.abs(tgtX - curX) < 0.001 && Math.abs(tgtY - curY) < 0.001;
+          if (idle) { curX = tgtX; curY = tgtY; }
+          const el = tiltBanner;
+          if (el) {
+            el.style.setProperty('--tilt-x', (Math.sin(curX * Math.PI / 2) * TILT_MAX_X).toFixed(2) + 'px');
+            el.style.setProperty('--tilt-y', (Math.sin(curY * Math.PI / 2) * TILT_MAX_Y).toFixed(2) + 'px');
+          }
+          raf = idle ? null : requestAnimationFrame(tick);
+        };
+
+        document.addEventListener('mousemove', (e) => {
+          const w = window.innerWidth || 1;
+          const h = window.innerHeight || 1;
+          tgtX = Math.max(-1, Math.min(1, (e.clientX / w) * 2 - 1));
+          tgtY = Math.max(-1, Math.min(1, (e.clientY / h) * 2 - 1));
+          if (!raf) raf = requestAnimationFrame(tick);
+        }, { passive: true });
+
+        window.addEventListener('blur', () => { if (raf) { cancelAnimationFrame(raf); raf = null; } });
+      })();
+
+      /* ============ 下拉栅栏：触摸（整页）与鼠标（横幅 + 资料头）共用同一套逻辑 ============ */
       const bannerWrap = document.querySelector('.profile-banner-wrap');
       const banner = document.getElementById('profile-banner');
-      let startY = 0;
-      let isPulling = false;
+      const pullHint = document.getElementById('pull-hint');
 
       const baseHeight = 160;
       const maxHeight = 320;
+      const PULL_SPAN = (maxHeight - baseHeight) * 2.2;
 
-      const getScrollTop = () => {
-        return window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+      let startY = 0;
+      let isPulling = false;
+      let pullSource = 'touch';
+      let mousePending = null;
+
+      const getScrollTop = () => window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+      /* 鼠标从哪里按下算「下拉」：横幅 + 资料头；这些区域里的按钮/链接不参与，避免抢点击 */
+      const PULL_ZONE_SEL = '.profile-banner-wrap, .profile-section';
+      const PULL_BLOCK_SEL = 'button, a, input, textarea, select, label, .toolbar, .tabs, .feed, .social-links, .action-buttons, .btn-outline';
+      const MOUSE_PULL_THRESHOLD = 6;
+
+      const canStartPull = () => !flagLocked
+        && !document.documentElement.classList.contains('force-portrait')
+        && getScrollTop() <= 0;
+
+      const setPullHint = (progress) => {
+        if (!pullHint) return;
+        pullHint.style.opacity = Math.max(0, Math.min(1, progress)).toFixed(3);
+        pullHint.textContent = progress >= 0.97 ? pickText('pull_hint_ready', '松手跳转') : pickText('pull_hint_pull', '拉动跳转');
       };
 
-      document.addEventListener('touchstart', (e) => {
-        if (flagLocked) return;
+      function resetBanner() {
+        if (pullHint) pullHint.style.opacity = '0';
+        bannerWrap.style.height = baseHeight + 'px';
+        banner.style.filter = 'blur(0px)';
+        banner.style.setProperty('--pull-scale', '1');
+      }
 
-        if (document.documentElement.classList.contains('force-portrait')) return;
-        if (getScrollTop() <= 0) {
-          startY = e.touches[0].clientY;
-          isPulling = true;
-          bannerWrap.style.transition = 'none';
-          banner.style.transition = 'none';
-        }
-      }, { passive: true });
+      const pullBegin = (y, source) => {
+        if (isPulling || !canStartPull()) return false;
+        startY = y;
+        isPulling = true;
+        pullSource = source;
+        bannerWrap.style.transition = 'none';
+        banner.style.transition = 'none';
+        return true;
+      };
 
-      document.addEventListener('touchmove', (e) => {
-        if (flagLocked) {
-          if (e.cancelable) e.preventDefault();
-          return;
-        }
-        if (!isPulling) return;
-        const currentY = e.touches[0].clientY;
-        const deltaY = currentY - startY;
-
-        if (deltaY > 0) {
-          if (e.cancelable) e.preventDefault();
-
-          const span = (maxHeight - baseHeight) * 2.2;
-          const t = Math.min(1, deltaY / span);
-          const pulled = (maxHeight - baseHeight) * (1 - Math.pow(1 - t, 2));
-          let newHeight = baseHeight + pulled;
-
-          if (newHeight > maxHeight) {
-            newHeight = maxHeight;
-          }
-
-          const hint = document.getElementById('pull-hint');
-          if (hint) {
-            const hp = (newHeight - baseHeight) / (maxHeight - baseHeight);
-            hint.style.opacity = Math.max(0, Math.min(1, hp)).toFixed(3);
-            hint.textContent = hp >= 0.97 ? '松手跳转' : '拉动跳转';
-          }
-
-          bannerWrap.style.height = `${newHeight}px`;
-          syncCanvasSize(canvasBg, ctxBg);
-
-          const progress = (newHeight - baseHeight) / (maxHeight - baseHeight);
-
-          const blurAmount = progress * 3.5;
-          banner.style.filter = `blur(${blurAmount}px)`;
-
-          banner.style.setProperty('--pull-scale', (1 + progress * 0.08).toFixed(3));
-
-        } else {
+      const pullMove = (y) => {
+        if (!isPulling) return false;
+        const deltaY = y - startY;
+        if (deltaY <= 0) {
           isPulling = false;
           resetBanner();
+          return false;
         }
-      }, { passive: false });
 
-      document.addEventListener('wheel', (e) => {
-        if (flagLocked && e.cancelable) e.preventDefault();
-      }, { passive: false });
+        const t = Math.min(1, deltaY / PULL_SPAN);
+        const pulled = (maxHeight - baseHeight) * (1 - Math.pow(1 - t, 2));
+        const newHeight = Math.min(maxHeight, baseHeight + pulled);
+        const progress = (newHeight - baseHeight) / (maxHeight - baseHeight);
 
-      let leaving = false;
-
-      const leaveTo = () => {
-        if (leaving) return;
-        leaving = true;
-        if (typeof stopWeatherForLeave === 'function') stopWeatherForLeave();
-        if (typeof pauseBgmForLeave === 'function') pauseBgmForLeave();
-        document.documentElement.classList.add('leaving');
-        setTimeout(() => {
-          window.location.href = 'https://tanfojze.github.io/tanfojze/';
-        }, 40);
+        setPullHint(progress);
+        bannerWrap.style.height = newHeight + 'px';
+        banner.style.filter = 'blur(' + (progress * 3.5).toFixed(2) + 'px)';
+        banner.style.setProperty('--pull-scale', (1 + progress * 0.08).toFixed(3));
+        return true;
       };
 
-      document.addEventListener('touchend', () => {
+      const pullEnd = () => {
         if (!isPulling) return;
         isPulling = false;
 
@@ -2211,29 +2822,80 @@
           return;
         }
 
-        const h1 = document.getElementById('pull-hint');
-        if (h1) h1.style.opacity = '0';
+        if (pullHint) pullHint.style.opacity = '0';
         bannerWrap.style.transition = 'height 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
-        const syncEnd = performance.now() + 400;
-        const keepSync = () => {
-          syncCanvasSize(canvasBg, ctxBg);
-          if (performance.now() < syncEnd) requestAnimationFrame(keepSync);
-        };
-        requestAnimationFrame(keepSync);
         banner.style.transition = 'filter 0.3s cubic-bezier(0.25, 0.8, 0.5, 1), transform 0.3s cubic-bezier(0.25, 0.8, 0.5, 1)';
-
-        bannerWrap.style.height = `${baseHeight}px`;
+        bannerWrap.style.height = baseHeight + 'px';
         banner.style.filter = 'blur(0px)';
         banner.style.setProperty('--pull-scale', '1');
+      };
+
+      const leaveTo = () => {
+        if (leaving) return;
+        leaving = true;
+        if (typeof stopWeatherForLeave === 'function') stopWeatherForLeave();
+        if (typeof pauseBgmForLeave === 'function') pauseBgmForLeave();
+        document.documentElement.classList.add('leaving');
+        setTimeout(() => {
+          window.location.href = pickText('pull_jump_url', 'https://tanfojze.github.io/tanfojze/');
+        }, 40);
+      };
+
+      /* —— 触摸：整页都能起手 —— */
+      document.addEventListener('touchstart', (e) => {
+        if (!e.touches || !e.touches.length) return;
+        pullBegin(e.touches[0].clientY, 'touch');
+      }, { passive: true });
+
+      document.addEventListener('touchmove', (e) => {
+        if (flagLocked) {
+          if (e.cancelable) e.preventDefault();
+          return;
+        }
+        if (!isPulling || pullSource !== 'touch' || !e.touches || !e.touches.length) return;
+        if (pullMove(e.touches[0].clientY) && e.cancelable) e.preventDefault();
+      }, { passive: false });
+
+      document.addEventListener('touchend', () => { if (pullSource === 'touch') pullEnd(); });
+      document.addEventListener('touchcancel', () => { if (pullSource === 'touch') pullEnd(); });
+
+      /* —— 鼠标：先下拖 6px 才判定，避免误吃点击与选字 —— */
+      const inPullZone = (target) => !!target && !!target.closest
+        && !target.closest(PULL_BLOCK_SEL)
+        && !!target.closest(PULL_ZONE_SEL);
+
+      document.addEventListener('mousedown', (e) => {
+        if (e.button !== 0 || isPulling) return;
+        if (!inPullZone(e.target)) return;
+        mousePending = { y: e.clientY, x: e.clientX };
       });
 
-      function resetBanner() {
-        const h0 = document.getElementById('pull-hint');
-        if (h0) h0.style.opacity = '0';
-        bannerWrap.style.height = `${baseHeight}px`;
-        banner.style.filter = 'blur(0px)';
-        banner.style.setProperty('--pull-scale', '1');
-      }
+      document.addEventListener('mousemove', (e) => {
+        if (isPulling && pullSource === 'mouse') {
+          if (pullMove(e.clientY) && e.cancelable) e.preventDefault();
+          return;
+        }
+        if (!mousePending) return;
+        const dy = e.clientY - mousePending.y;
+        if (dy <= MOUSE_PULL_THRESHOLD || dy <= Math.abs(e.clientX - mousePending.x)) return;
+        const y0 = mousePending.y;
+        mousePending = null;
+        if (!pullBegin(y0, 'mouse')) return;
+        const sel = window.getSelection && window.getSelection();
+        if (sel && sel.removeAllRanges) sel.removeAllRanges();
+        if (e.cancelable) e.preventDefault();
+        pullMove(e.clientY);
+      });
+
+      document.addEventListener('mouseup', () => {
+        mousePending = null;
+        if (pullSource === 'mouse') pullEnd();
+      });
+
+      window.addEventListener('blur', () => {
+        mousePending = null;
+        if (pullSource === 'mouse') pullEnd();
+      });
 
       bannerWrap.addEventListener('transitionend', () => {
         if (!isPulling) {
