@@ -1,1 +1,291 @@
-这个页面不存在
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+<meta name="theme-color" content="#10161d" />
+<title>404 · 页面不存在</title>
+<style>
+  :root{
+    --bg: #10161d;
+    --accent: #1d9bf0;
+  }
+
+  *{
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+  }
+
+  html,
+  body{
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
+  body{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    overscroll-behavior: none;
+    touch-action: none;
+    background: var(--bg);
+    color: #fff;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
+                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    -webkit-user-select: none;
+    user-select: none;
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  .glow-layer{
+    position: fixed;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .glow{
+    position: absolute;
+    left: 0;
+    top: 0;
+    border-radius: 50%;
+    pointer-events: none;
+    will-change: transform;
+    transform: translate(-50%, -50%);
+  }
+
+  .glow--a{
+    width: 95vmax;
+    height: 95vmax;
+    background: radial-gradient(
+      circle at center,
+      rgba(29, 155, 240, 0.20) 0%,
+      rgba(29, 155, 240, 0.08) 32%,
+      rgba(29, 155, 240, 0) 68%
+    );
+    animation: breathe 9s ease-in-out infinite;
+  }
+
+  .glow--b{
+    width: 70vmax;
+    height: 70vmax;
+    background: radial-gradient(
+      circle at center,
+      rgba(90, 200, 255, 0.13) 0%,
+      rgba(120, 80, 255, 0.07) 36%,
+      rgba(0, 0, 0, 0) 70%
+    );
+    animation: breathe 13s ease-in-out infinite reverse;
+  }
+
+  @keyframes breathe{
+    0%, 100%{ opacity: .8; }
+    50%     { opacity: 1;  }
+  }
+
+  .content{
+    position: relative;
+    z-index: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 24px;
+    transform: translateY(-5vh);
+    text-align: center;
+  }
+
+  .icon{
+    display: block;
+    width: min(240px, 62vw);
+    height: auto;
+    filter: drop-shadow(0 8px 28px rgba(29, 155, 240, 0.18));
+  }
+
+  .subtitle{
+    margin-top: 24px;
+    font-size: 14px;
+    line-height: 1.5;
+    font-weight: 400;
+    letter-spacing: 0.12em;
+    text-indent: 0.12em;
+    color: rgba(255, 255, 255, 0.92);
+  }
+
+  .actions{
+    margin-top: 38px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+  }
+
+  .btn{
+    appearance: none;
+    -webkit-appearance: none;
+    width: min(220px, 62vw);
+    padding: 13px 0;
+    background: transparent;
+    border: 1.5px solid rgba(255, 255, 255, 0.7);
+    border-radius: 999px;
+    color: #fff;
+    font-family: inherit;
+    font-size: 15px;
+    letter-spacing: 0.14em;
+    text-indent: 0.14em;
+    cursor: pointer;
+    outline: none;
+    transition: color .3s ease,
+                border-color .3s ease,
+                box-shadow .3s ease,
+                transform .12s ease;
+  }
+
+  .btn:hover{
+    border-color: rgba(255, 255, 255, 0.95);
+  }
+
+  .btn:active{
+    transform: scale(0.97);
+  }
+
+  .btn.hit{
+    color: var(--accent);
+    border-color: var(--accent);
+    box-shadow: 0 0 0 1px rgba(29, 155, 240, 0.15),
+                0 0 22px rgba(29, 155, 240, 0.35);
+  }
+
+  @media (max-height: 560px){
+    .content{ transform: translateY(-2vh) scale(.92); }
+    .actions{ margin-top: 24px; }
+  }
+</style>
+</head>
+<body>
+
+  <div class="glow-layer" aria-hidden="true">
+    <div class="glow glow--a" id="glowA"></div>
+    <div class="glow glow--b" id="glowB"></div>
+  </div>
+
+  <main class="content">
+    <svg class="icon" viewBox="0 0 250 106" fill="none"
+         xmlns="http://www.w3.org/2000/svg" role="img" aria-label="404">
+      <g stroke="#ffffff" stroke-width="11"
+         stroke-linecap="round" stroke-linejoin="round">
+        <path d="M58 12 L18 62 L72 62" />
+        <path d="M70 22 L70 94" />
+        <ellipse cx="120" cy="53" rx="27" ry="41" />
+        <path d="M216 12 L176 62 L230 62" />
+        <path d="M228 22 L228 94" />
+      </g>
+    </svg>
+
+    <p class="subtitle">该页面不存在</p>
+
+    <div class="actions">
+      <button class="btn" type="button">搜索</button>
+      <button class="btn" type="button">主页</button>
+      <button class="btn" type="button">发现</button>
+    </div>
+  </main>
+
+<script>
+(function () {
+  'use strict';
+
+  document.querySelectorAll('.btn').forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      btn.classList.remove('hit');
+      void btn.offsetWidth;
+      btn.classList.add('hit');
+
+      clearTimeout(btn._timer);
+      btn._timer = setTimeout(function () {
+        btn.classList.remove('hit');
+      }, 450);
+    });
+  });
+
+  var glowA = document.getElementById('glowA');
+  var glowB = document.getElementById('glowB');
+
+  var targetX = 0.5, targetY = 0.5;
+  var curX = 0.5, curY = 0.5;
+
+  function clamp(v, a, b) {
+    return v < a ? a : (v > b ? b : v);
+  }
+
+  window.addEventListener('mousemove', function (e) {
+    targetX = clamp(e.clientX / window.innerWidth, 0, 1);
+    targetY = clamp(e.clientY / window.innerHeight, 0, 1);
+  }, { passive: true });
+
+  function onOrientation(e) {
+    if (e.gamma == null && e.beta == null) return;
+
+    var gamma = e.gamma || 0;
+    var beta = e.beta || 0;
+
+    targetX = clamp(0.5 + (gamma / 45) * 0.35, 0.12, 0.88);
+    targetY = clamp(0.5 + ((beta - 45) / 45) * 0.35, 0.12, 0.88);
+  }
+
+  function requestMotionPermission() {
+    if (typeof DeviceOrientationEvent !== 'undefined' &&
+        typeof DeviceOrientationEvent.requestPermission === 'function') {
+      DeviceOrientationEvent.requestPermission()
+        .then(function (state) {
+          if (state === 'granted') {
+            window.addEventListener('deviceorientation', onOrientation, true);
+          }
+        })
+        .catch(function () {});
+    }
+  }
+
+  window.addEventListener('deviceorientation', onOrientation, true);
+  window.addEventListener('click', requestMotionPermission, { once: true });
+  window.addEventListener('touchend', requestMotionPermission, { once: true });
+
+  function render() {
+    curX += (targetX - curX) * 0.07;
+    curY += (targetY - curY) * 0.07;
+
+    if (Math.abs(targetX - curX) < 0.0004) curX = targetX;
+    if (Math.abs(targetY - curY) < 0.0004) curY = targetY;
+
+    var w = window.innerWidth;
+    var h = window.innerHeight;
+
+    glowA.style.transform =
+      'translate3d(' + (curX * w).toFixed(1) + 'px,' +
+      (curY * h).toFixed(1) + 'px,0) translate(-50%,-50%)';
+
+    glowB.style.transform =
+      'translate3d(' + ((1 - curX) * w).toFixed(1) + 'px,' +
+      ((1 - curY) * h).toFixed(1) + 'px,0) translate(-50%,-50%)';
+
+    requestAnimationFrame(render);
+  }
+
+  requestAnimationFrame(render);
+
+  document.addEventListener('touchmove', function (e) {
+    e.preventDefault();
+  }, { passive: false });
+
+  document.addEventListener('gesturestart', function (e) {
+    e.preventDefault();
+  });
+})();
+</script>
+</body>
+</html>
