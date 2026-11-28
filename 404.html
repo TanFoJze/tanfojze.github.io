@@ -11,14 +11,15 @@
   --mx: 50%;
   --my: 50%;
   --grad: linear-gradient(115deg,
-    rgba(255, 255, 255, .30) 0%,
-    rgba(255, 255, 255, .30) 28%,
-    rgba(255, 255, 255, .70) 38%,
-    #ffffff 46%,
-    #ffffff 52%,
-    rgba(255, 255, 255, .70) 60%,
-    rgba(255, 255, 255, .30) 70%,
-    rgba(255, 255, 255, .30) 100%);
+    rgba(255, 255, 255, .22) 0%,
+    rgba(255, 255, 255, .22) 26%,
+    rgba(255, 255, 255, .55) 36%,
+    rgba(255, 255, 255, .95) 44%,
+    #ffffff 50%,
+    rgba(255, 255, 255, .95) 56%,
+    rgba(255, 255, 255, .55) 64%,
+    rgba(255, 255, 255, .22) 74%,
+    rgba(255, 255, 255, .22) 100%);
 }
 
 * {
@@ -208,37 +209,50 @@ body {
     if (e.gamma == null && e.beta == null) return;
     var gamma = e.gamma || 0;
     var beta = e.beta || 0;
-    targetX = clamp(0.5 + gamma / 55, 0.05, 0.95);
-    targetY = clamp(0.5 + (beta - 50) / 70, 0.05, 0.95);
+    targetX = clamp(0.5 + gamma / 45, 0.02, 0.98);
+    targetY = clamp(0.5 + (beta - 50) / 55, 0.02, 0.98);
   }
 
-  function enableMotion() {
-    if (typeof DeviceOrientationEvent !== 'undefined' &&
-        typeof DeviceOrientationEvent.requestPermission === 'function') {
-      DeviceOrientationEvent.requestPermission()
-        .then(function (state) {
-          if (state === 'granted') {
-            window.addEventListener('deviceorientation', onOrientation, true);
-          }
-        })
-        .catch(function () {});
-    }
+  var motionAttached = false;
+
+  function attachOrientation() {
+    if (motionAttached) return;
+    motionAttached = true;
+    window.addEventListener('deviceorientation', onOrientation, true);
   }
 
-  if (typeof DeviceOrientationEvent !== 'undefined') {
+  function requestMotion() {
+    if (motionAttached) return;
+    if (typeof DeviceOrientationEvent === 'undefined') return;
+
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-      window.addEventListener('click', enableMotion, { once: true });
-      window.addEventListener('touchend', enableMotion, { once: true });
+      try {
+        DeviceOrientationEvent.requestPermission()
+          .then(function (state) {
+            if (state === 'granted') attachOrientation();
+          })
+          .catch(function () {});
+      } catch (err) {
+        /* 非用户手势时调用会抛错，忽略 */
+      }
     } else {
-      window.addEventListener('deviceorientation', onOrientation, true);
+      attachOrientation();
     }
   }
+
+  /* 加载即尝试（Android / 已授权设备会立即生效） */
+  requestMotion();
+
+  /* 用户任何一次交互都会静默触发授权（iOS 需要手势） */
+  ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function (evt) {
+    window.addEventListener(evt, requestMotion, { passive: true, capture: true });
+  });
 
   function render() {
-    curX += (targetX - curX) * 0.08;
-    curY += (targetY - curY) * 0.08;
-    if (Math.abs(targetX - curX) < 0.0005) curX = targetX;
-    if (Math.abs(targetY - curY) < 0.0005) curY = targetY;
+    curX += (targetX - curX) * 0.09;
+    curY += (targetY - curY) * 0.09;
+    if (Math.abs(targetX - curX) < 0.0004) curX = targetX;
+    if (Math.abs(targetY - curY) < 0.0004) curY = targetY;
 
     root.style.setProperty('--mx', (curX * 100).toFixed(2) + '%');
     root.style.setProperty('--my', (curY * 100).toFixed(2) + '%');
