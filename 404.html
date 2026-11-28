@@ -8,7 +8,6 @@
 <style>
 :root {
   --bg: #10161d;
-  --accent: #1d9bf0;
   --mx: 50%;
   --my: 50%;
 }
@@ -53,41 +52,40 @@ body {
 
 .holo__grain {
   position: absolute;
-  inset: 0;
+  inset: -20%;
   background: repeating-linear-gradient(
     115deg,
-    rgba(29, 155, 240, 0) 0%,
-    rgba(29, 155, 240, .05) 4%,
-    rgba(64, 224, 208, .05) 8%,
-    rgba(138, 43, 226, .05) 12%,
-    rgba(255, 110, 199, .05) 16%,
-    rgba(29, 155, 240, 0) 20%
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, .04) 5%,
+    rgba(255, 255, 255, .09) 7.5%,
+    rgba(255, 255, 255, .04) 10%,
+    rgba(255, 255, 255, 0) 15%
   );
   background-size: 220% 220%;
   background-position: calc(100% - var(--mx)) var(--my);
-  filter: blur(26px);
+  filter: blur(18px);
   opacity: .9;
 }
 
 .holo__shine {
   position: absolute;
-  inset: 0;
+  inset: -10%;
   background: linear-gradient(
     115deg,
     transparent 0%,
-    transparent 42%,
-    rgba(29, 155, 240, .10) 45%,
-    rgba(64, 224, 208, .20) 47.5%,
-    rgba(138, 43, 226, .24) 50%,
-    rgba(255, 110, 199, .20) 52.5%,
-    rgba(29, 155, 240, .10) 55%,
-    transparent 58%,
+    transparent 40%,
+    rgba(255, 255, 255, .05) 44%,
+    rgba(255, 255, 255, .16) 47.5%,
+    rgba(255, 255, 255, .24) 50%,
+    rgba(255, 255, 255, .16) 52.5%,
+    rgba(255, 255, 255, .05) 56%,
+    transparent 60%,
     transparent 100%
   );
   background-size: 200% 200%;
   background-position: calc(100% - var(--mx)) var(--my);
-  filter: blur(3px);
-  animation: holoPulse 6s ease-in-out infinite;
+  filter: blur(2px);
+  animation: holoPulse 5s ease-in-out infinite;
 }
 
 .holo__glow {
@@ -95,14 +93,14 @@ body {
   inset: 0;
   background: radial-gradient(
     circle at var(--mx) var(--my),
-    rgba(170, 220, 255, .09) 0%,
-    rgba(29, 155, 240, .05) 20%,
-    transparent 44%
+    rgba(255, 255, 255, .07) 0%,
+    rgba(255, 255, 255, .03) 22%,
+    transparent 46%
   );
 }
 
 @keyframes holoPulse {
-  0%, 100% { opacity: .8; }
+  0%, 100% { opacity: .75; }
   50%      { opacity: 1; }
 }
 
@@ -123,7 +121,7 @@ body {
   line-height: .9;
   letter-spacing: .04em;
   color: #fff;
-  text-shadow: 0 10px 50px rgba(29, 155, 240, .18);
+  text-shadow: 0 10px 50px rgba(255, 255, 255, .12);
 }
 
 .subtitle {
@@ -156,7 +154,7 @@ body {
   text-indent: .16em;
   cursor: pointer;
   outline: none;
-  transition: color .3s, border-color .3s, box-shadow .3s, transform .12s;
+  transition: color .1s ease, border-color .1s ease, background-color .1s ease, transform .1s ease;
 }
 
 .btn:hover {
@@ -168,9 +166,9 @@ body {
 }
 
 .btn.hit {
-  color: var(--accent);
-  border-color: var(--accent);
-  box-shadow: 0 0 0 1px rgba(29, 155, 240, .15), 0 0 24px rgba(29, 155, 240, .35);
+  background: #fff;
+  border-color: #fff;
+  color: #10161d;
 }
 
 @media (max-height: 580px) {
@@ -211,18 +209,6 @@ body {
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   window.addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
 
-  document.querySelectorAll('.btn').forEach(function (btn) {
-    btn.addEventListener('click', function () {
-      btn.classList.remove('hit');
-      void btn.offsetWidth;
-      btn.classList.add('hit');
-      clearTimeout(btn._t);
-      btn._t = setTimeout(function () {
-        btn.classList.remove('hit');
-      }, 450);
-    });
-  });
-
   var root = document.documentElement;
   var targetX = 0.5, targetY = 0.5;
   var curX = 0.5, curY = 0.5;
@@ -261,8 +247,6 @@ body {
           }
         })
         .catch(function () {});
-    } else if (typeof DeviceOrientationEvent !== 'undefined') {
-      window.addEventListener('deviceorientation', onOrientation, true);
     }
   }
 
@@ -287,6 +271,29 @@ body {
     requestAnimationFrame(render);
   }
   requestAnimationFrame(render);
+
+  document.querySelectorAll('.btn').forEach(function (btn) {
+    function press(e) {
+      if (e && e.cancelable) e.preventDefault();
+      btn.classList.add('hit');
+    }
+    function release() {
+      btn.classList.remove('hit');
+    }
+
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointerleave', release);
+    btn.addEventListener('pointercancel', release);
+
+    btn.addEventListener('touchstart', press, { passive: false });
+    btn.addEventListener('touchend', release);
+    btn.addEventListener('touchcancel', release);
+
+    btn.addEventListener('mousedown', press);
+    btn.addEventListener('mouseup', release);
+    btn.addEventListener('mouseleave', release);
+  });
 })();
 </script>
 </body>
