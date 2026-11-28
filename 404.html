@@ -1,221 +1,229 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="UTF-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-<meta name="theme-color" content="#10161d" />
-<title>404 · 页面不存在</title>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover">
+<meta name="theme-color" content="#10161d">
+<title>404</title>
 <style>
-  :root{
-    --bg: #10161d;
-    --accent: #1d9bf0;
-  }
+:root {
+  --bg: #10161d;
+  --accent: #1d9bf0;
+  --mx: 50%;
+  --my: 50%;
+}
 
-  *{
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
 
-  html,
-  body{
-    height: 100%;
-    overflow: hidden;
-    overscroll-behavior: none;
-  }
+html,
+body {
+  height: 100%;
+  overflow: hidden;
+  overscroll-behavior: none;
+}
 
-  body{
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    overscroll-behavior: none;
-    touch-action: none;
-    background: var(--bg);
-    color: #fff;
-    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC",
-                 "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    -webkit-user-select: none;
-    user-select: none;
-    -webkit-tap-highlight-color: transparent;
-  }
+body {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  touch-action: none;
+  background: var(--bg);
+  color: #fff;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "PingFang SC", "Hiragino Sans GB", "Microsoft YaHei", sans-serif;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  -webkit-user-select: none;
+  user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+}
 
-  .glow-layer{
-    position: fixed;
-    inset: 0;
-    overflow: hidden;
-    pointer-events: none;
-    z-index: 0;
-  }
+.holo {
+  position: fixed;
+  inset: 0;
+  overflow: hidden;
+  pointer-events: none;
+  z-index: 0;
+}
 
-  .glow{
-    position: absolute;
-    left: 0;
-    top: 0;
-    border-radius: 50%;
-    pointer-events: none;
-    will-change: transform;
-    transform: translate(-50%, -50%);
-  }
+.holo__grain {
+  position: absolute;
+  inset: 0;
+  background: repeating-linear-gradient(
+    115deg,
+    rgba(29, 155, 240, 0) 0%,
+    rgba(29, 155, 240, .05) 4%,
+    rgba(64, 224, 208, .05) 8%,
+    rgba(138, 43, 226, .05) 12%,
+    rgba(255, 110, 199, .05) 16%,
+    rgba(29, 155, 240, 0) 20%
+  );
+  background-size: 220% 220%;
+  background-position: calc(100% - var(--mx)) var(--my);
+  filter: blur(26px);
+  opacity: .9;
+}
 
-  .glow--a{
-    width: 95vmax;
-    height: 95vmax;
-    background: radial-gradient(
-      circle at center,
-      rgba(29, 155, 240, 0.20) 0%,
-      rgba(29, 155, 240, 0.08) 32%,
-      rgba(29, 155, 240, 0) 68%
-    );
-    animation: breathe 9s ease-in-out infinite;
-  }
+.holo__shine {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(
+    115deg,
+    transparent 0%,
+    transparent 42%,
+    rgba(29, 155, 240, .10) 45%,
+    rgba(64, 224, 208, .20) 47.5%,
+    rgba(138, 43, 226, .24) 50%,
+    rgba(255, 110, 199, .20) 52.5%,
+    rgba(29, 155, 240, .10) 55%,
+    transparent 58%,
+    transparent 100%
+  );
+  background-size: 200% 200%;
+  background-position: calc(100% - var(--mx)) var(--my);
+  filter: blur(3px);
+  animation: holoPulse 6s ease-in-out infinite;
+}
 
-  .glow--b{
-    width: 70vmax;
-    height: 70vmax;
-    background: radial-gradient(
-      circle at center,
-      rgba(90, 200, 255, 0.13) 0%,
-      rgba(120, 80, 255, 0.07) 36%,
-      rgba(0, 0, 0, 0) 70%
-    );
-    animation: breathe 13s ease-in-out infinite reverse;
-  }
+.holo__glow {
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(
+    circle at var(--mx) var(--my),
+    rgba(170, 220, 255, .09) 0%,
+    rgba(29, 155, 240, .05) 20%,
+    transparent 44%
+  );
+}
 
-  @keyframes breathe{
-    0%, 100%{ opacity: .8; }
-    50%     { opacity: 1;  }
-  }
+@keyframes holoPulse {
+  0%, 100% { opacity: .8; }
+  50%      { opacity: 1; }
+}
 
-  .content{
-    position: relative;
-    z-index: 1;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 24px;
-    transform: translateY(-5vh);
-    text-align: center;
-  }
+.content {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px;
+  transform: translateY(-6vh);
+  text-align: center;
+}
 
-  .icon{
-    display: block;
-    width: min(240px, 62vw);
-    height: auto;
-    filter: drop-shadow(0 8px 28px rgba(29, 155, 240, 0.18));
-  }
+.code {
+  font-size: clamp(100px, 30vw, 190px);
+  font-weight: 800;
+  line-height: .9;
+  letter-spacing: .04em;
+  color: #fff;
+  text-shadow: 0 10px 50px rgba(29, 155, 240, .18);
+}
 
-  .subtitle{
-    margin-top: 24px;
-    font-size: 14px;
-    line-height: 1.5;
-    font-weight: 400;
-    letter-spacing: 0.12em;
-    text-indent: 0.12em;
-    color: rgba(255, 255, 255, 0.92);
-  }
+.subtitle {
+  margin-top: 22px;
+  font-size: 14px;
+  letter-spacing: .14em;
+  text-indent: .14em;
+  color: rgba(255, 255, 255, .9);
+}
 
-  .actions{
-    margin-top: 38px;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    gap: 14px;
-  }
+.actions {
+  margin-top: 40px;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
 
-  .btn{
-    appearance: none;
-    -webkit-appearance: none;
-    width: min(220px, 62vw);
-    padding: 13px 0;
-    background: transparent;
-    border: 1.5px solid rgba(255, 255, 255, 0.7);
-    border-radius: 999px;
-    color: #fff;
-    font-family: inherit;
-    font-size: 15px;
-    letter-spacing: 0.14em;
-    text-indent: 0.14em;
-    cursor: pointer;
-    outline: none;
-    transition: color .3s ease,
-                border-color .3s ease,
-                box-shadow .3s ease,
-                transform .12s ease;
-  }
+.btn {
+  appearance: none;
+  -webkit-appearance: none;
+  width: min(220px, 64vw);
+  padding: 13px 0;
+  background: transparent;
+  border: 1.5px solid rgba(255, 255, 255, .72);
+  border-radius: 10px;
+  color: #fff;
+  font-family: inherit;
+  font-size: 15px;
+  letter-spacing: .16em;
+  text-indent: .16em;
+  cursor: pointer;
+  outline: none;
+  transition: color .3s, border-color .3s, box-shadow .3s, transform .12s;
+}
 
-  .btn:hover{
-    border-color: rgba(255, 255, 255, 0.95);
-  }
+.btn:hover {
+  border-color: rgba(255, 255, 255, .95);
+}
 
-  .btn:active{
-    transform: scale(0.97);
-  }
+.btn:active {
+  transform: scale(.97);
+}
 
-  .btn.hit{
-    color: var(--accent);
-    border-color: var(--accent);
-    box-shadow: 0 0 0 1px rgba(29, 155, 240, 0.15),
-                0 0 22px rgba(29, 155, 240, 0.35);
-  }
+.btn.hit {
+  color: var(--accent);
+  border-color: var(--accent);
+  box-shadow: 0 0 0 1px rgba(29, 155, 240, .15), 0 0 24px rgba(29, 155, 240, .35);
+}
 
-  @media (max-height: 560px){
-    .content{ transform: translateY(-2vh) scale(.92); }
-    .actions{ margin-top: 24px; }
-  }
+@media (max-height: 580px) {
+  .content { transform: translateY(-2vh) scale(.9); }
+  .actions { margin-top: 24px; }
+}
 </style>
 </head>
 <body>
 
-  <div class="glow-layer" aria-hidden="true">
-    <div class="glow glow--a" id="glowA"></div>
-    <div class="glow glow--b" id="glowB"></div>
+<div class="holo" aria-hidden="true">
+  <div class="holo__grain"></div>
+  <div class="holo__shine"></div>
+  <div class="holo__glow"></div>
+</div>
+
+<main class="content">
+  <div class="code">404</div>
+  <p class="subtitle">该页面不存在</p>
+  <div class="actions">
+    <button class="btn" type="button">搜索</button>
+    <button class="btn" type="button">主页</button>
+    <button class="btn" type="button">发现</button>
   </div>
-
-  <main class="content">
-    <svg class="icon" viewBox="0 0 250 106" fill="none"
-         xmlns="http://www.w3.org/2000/svg" role="img" aria-label="404">
-      <g stroke="#ffffff" stroke-width="11"
-         stroke-linecap="round" stroke-linejoin="round">
-        <path d="M58 12 L18 62 L72 62" />
-        <path d="M70 22 L70 94" />
-        <ellipse cx="120" cy="53" rx="27" ry="41" />
-        <path d="M216 12 L176 62 L230 62" />
-        <path d="M228 22 L228 94" />
-      </g>
-    </svg>
-
-    <p class="subtitle">该页面不存在</p>
-
-    <div class="actions">
-      <button class="btn" type="button">搜索</button>
-      <button class="btn" type="button">主页</button>
-      <button class="btn" type="button">发现</button>
-    </div>
-  </main>
+</main>
 
 <script>
 (function () {
   'use strict';
+
+  document.addEventListener('copy', function (e) { e.preventDefault(); });
+  document.addEventListener('cut', function (e) { e.preventDefault(); });
+  document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
+  document.addEventListener('selectstart', function (e) { e.preventDefault(); });
+  document.addEventListener('dragstart', function (e) { e.preventDefault(); });
+
+  document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
+  document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
+  window.addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
 
   document.querySelectorAll('.btn').forEach(function (btn) {
     btn.addEventListener('click', function () {
       btn.classList.remove('hit');
       void btn.offsetWidth;
       btn.classList.add('hit');
-
-      clearTimeout(btn._timer);
-      btn._timer = setTimeout(function () {
+      clearTimeout(btn._t);
+      btn._t = setTimeout(function () {
         btn.classList.remove('hit');
       }, 450);
     });
   });
 
-  var glowA = document.getElementById('glowA');
-  var glowB = document.getElementById('glowB');
-
+  var root = document.documentElement;
   var targetX = 0.5, targetY = 0.5;
   var curX = 0.5, curY = 0.5;
 
@@ -228,17 +236,22 @@
     targetY = clamp(e.clientY / window.innerHeight, 0, 1);
   }, { passive: true });
 
+  window.addEventListener('touchmove', function (e) {
+    if (!e.touches || !e.touches.length) return;
+    var t = e.touches[0];
+    targetX = clamp(t.clientX / window.innerWidth, 0, 1);
+    targetY = clamp(t.clientY / window.innerHeight, 0, 1);
+  }, { passive: true });
+
   function onOrientation(e) {
     if (e.gamma == null && e.beta == null) return;
-
     var gamma = e.gamma || 0;
     var beta = e.beta || 0;
-
-    targetX = clamp(0.5 + (gamma / 45) * 0.35, 0.12, 0.88);
-    targetY = clamp(0.5 + ((beta - 45) / 45) * 0.35, 0.12, 0.88);
+    targetX = clamp(0.5 + gamma / 55, 0.05, 0.95);
+    targetY = clamp(0.5 + (beta - 50) / 70, 0.05, 0.95);
   }
 
-  function requestMotionPermission() {
+  function enableMotion() {
     if (typeof DeviceOrientationEvent !== 'undefined' &&
         typeof DeviceOrientationEvent.requestPermission === 'function') {
       DeviceOrientationEvent.requestPermission()
@@ -248,43 +261,32 @@
           }
         })
         .catch(function () {});
+    } else if (typeof DeviceOrientationEvent !== 'undefined') {
+      window.addEventListener('deviceorientation', onOrientation, true);
     }
   }
 
-  window.addEventListener('deviceorientation', onOrientation, true);
-  window.addEventListener('click', requestMotionPermission, { once: true });
-  window.addEventListener('touchend', requestMotionPermission, { once: true });
+  if (typeof DeviceOrientationEvent !== 'undefined') {
+    if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+      window.addEventListener('click', enableMotion, { once: true });
+      window.addEventListener('touchend', enableMotion, { once: true });
+    } else {
+      window.addEventListener('deviceorientation', onOrientation, true);
+    }
+  }
 
   function render() {
-    curX += (targetX - curX) * 0.07;
-    curY += (targetY - curY) * 0.07;
+    curX += (targetX - curX) * 0.08;
+    curY += (targetY - curY) * 0.08;
+    if (Math.abs(targetX - curX) < 0.0005) curX = targetX;
+    if (Math.abs(targetY - curY) < 0.0005) curY = targetY;
 
-    if (Math.abs(targetX - curX) < 0.0004) curX = targetX;
-    if (Math.abs(targetY - curY) < 0.0004) curY = targetY;
-
-    var w = window.innerWidth;
-    var h = window.innerHeight;
-
-    glowA.style.transform =
-      'translate3d(' + (curX * w).toFixed(1) + 'px,' +
-      (curY * h).toFixed(1) + 'px,0) translate(-50%,-50%)';
-
-    glowB.style.transform =
-      'translate3d(' + ((1 - curX) * w).toFixed(1) + 'px,' +
-      ((1 - curY) * h).toFixed(1) + 'px,0) translate(-50%,-50%)';
+    root.style.setProperty('--mx', (curX * 100).toFixed(2) + '%');
+    root.style.setProperty('--my', (curY * 100).toFixed(2) + '%');
 
     requestAnimationFrame(render);
   }
-
   requestAnimationFrame(render);
-
-  document.addEventListener('touchmove', function (e) {
-    e.preventDefault();
-  }, { passive: false });
-
-  document.addEventListener('gesturestart', function (e) {
-    e.preventDefault();
-  });
 })();
 </script>
 </body>
