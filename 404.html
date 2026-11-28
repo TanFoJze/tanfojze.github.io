@@ -11,15 +11,15 @@
   --mx: 50%;
   --my: 50%;
   --grad: linear-gradient(115deg,
-    rgba(255, 255, 255, .22) 0%,
-    rgba(255, 255, 255, .22) 26%,
-    rgba(255, 255, 255, .55) 36%,
-    rgba(255, 255, 255, .95) 44%,
+    rgba(255, 255, 255, 0.02) 0%,
+    rgba(255, 255, 255, 0.02) 20%,
+    rgba(255, 255, 255, 0.30) 32%,
+    rgba(255, 255, 255, 0.85) 44%,
     #ffffff 50%,
-    rgba(255, 255, 255, .95) 56%,
-    rgba(255, 255, 255, .55) 64%,
-    rgba(255, 255, 255, .22) 74%,
-    rgba(255, 255, 255, .22) 100%);
+    rgba(255, 255, 255, 0.85) 56%,
+    rgba(255, 255, 255, 0.30) 68%,
+    rgba(255, 255, 255, 0.02) 80%,
+    rgba(255, 255, 255, 0.02) 100%);
 }
 
 * {
@@ -69,8 +69,8 @@ body {
   line-height: .9;
   letter-spacing: .04em;
   background-image: var(--grad);
-  background-size: 250% 250%;
-  background-position: var(--mx) var(--my);
+  background-size: 200% 200%;
+  background-position: calc(100% - var(--mx)) calc(100% - var(--my));
   background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
@@ -84,8 +84,8 @@ body {
   letter-spacing: .14em;
   text-indent: .14em;
   background-image: var(--grad);
-  background-size: 250% 250%;
-  background-position: var(--mx) var(--my);
+  background-size: 200% 200%;
+  background-position: calc(100% - var(--mx)) calc(100% - var(--my));
   background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
@@ -105,13 +105,15 @@ body {
   -webkit-appearance: none;
   width: min(220px, 64vw);
   padding: 13px 0;
-  border: 1.5px solid transparent;
+  border: 2px solid transparent;
   border-radius: 10px;
-  background-image: linear-gradient(var(--bg), var(--bg)), var(--grad);
+  background-image:
+    linear-gradient(var(--bg), var(--bg)),
+    var(--grad);
   background-origin: padding-box, border-box;
   background-clip: padding-box, border-box;
-  background-size: 100% 100%, 250% 250%;
-  background-position: 0 0, var(--mx) var(--my);
+  background-size: 100% 100%, 200% 200%;
+  background-position: 0 0, calc(100% - var(--mx)) calc(100% - var(--my));
   background-repeat: no-repeat;
   color: transparent;
   font-family: inherit;
@@ -120,14 +122,14 @@ body {
   text-indent: .16em;
   cursor: pointer;
   outline: none;
-  transition: background-color .08s ease, transform .08s ease;
+  transition: transform .08s ease;
 }
 
 .btn span {
   display: inline-block;
   background-image: var(--grad);
-  background-size: 250% 250%;
-  background-position: var(--mx) var(--my);
+  background-size: 200% 200%;
+  background-position: calc(100% - var(--mx)) calc(100% - var(--my));
   background-repeat: no-repeat;
   -webkit-background-clip: text;
   background-clip: text;
@@ -142,9 +144,9 @@ body {
 }
 
 .btn.hit {
-  background-image: none;
-  background-color: #fff;
-  border-color: #fff;
+  background-image:
+    linear-gradient(transparent, transparent),
+    var(--grad);
 }
 
 .btn.hit span {
@@ -180,7 +182,6 @@ body {
   document.addEventListener('contextmenu', function (e) { e.preventDefault(); });
   document.addEventListener('selectstart', function (e) { e.preventDefault(); });
   document.addEventListener('dragstart', function (e) { e.preventDefault(); });
-
   document.addEventListener('touchmove', function (e) { e.preventDefault(); }, { passive: false });
   document.addEventListener('gesturestart', function (e) { e.preventDefault(); });
   window.addEventListener('wheel', function (e) { e.preventDefault(); }, { passive: false });
@@ -189,16 +190,21 @@ body {
   var targetX = 0.5, targetY = 0.5;
   var curX = 0.5, curY = 0.5;
 
+  var lastOrientation = 0;
+  var hasOrientation = false;
+
   function clamp(v, a, b) {
     return v < a ? a : (v > b ? b : v);
   }
 
   window.addEventListener('mousemove', function (e) {
+    if (hasOrientation && Date.now() - lastOrientation < 1500) return;
     targetX = clamp(e.clientX / window.innerWidth, 0, 1);
     targetY = clamp(e.clientY / window.innerHeight, 0, 1);
   }, { passive: true });
 
   window.addEventListener('touchmove', function (e) {
+    if (hasOrientation && Date.now() - lastOrientation < 1500) return;
     if (!e.touches || !e.touches.length) return;
     var t = e.touches[0];
     targetX = clamp(t.clientX / window.innerWidth, 0, 1);
@@ -207,50 +213,49 @@ body {
 
   function onOrientation(e) {
     if (e.gamma == null && e.beta == null) return;
+    hasOrientation = true;
+    lastOrientation = Date.now();
     var gamma = e.gamma || 0;
     var beta = e.beta || 0;
-    targetX = clamp(0.5 + gamma / 45, 0.02, 0.98);
-    targetY = clamp(0.5 + (beta - 50) / 55, 0.02, 0.98);
+    targetX = clamp(0.5 + gamma / 90, 0.02, 0.98);
+    targetY = clamp(0.5 + (beta - 90) / 90, 0.02, 0.98);
   }
 
-  var motionAttached = false;
-
+  var orientationAttached = false;
   function attachOrientation() {
-    if (motionAttached) return;
-    motionAttached = true;
+    if (orientationAttached) return;
+    orientationAttached = true;
     window.addEventListener('deviceorientation', onOrientation, true);
+    window.addEventListener('deviceorientationabsolute', onOrientation, true);
   }
 
   function requestMotion() {
-    if (motionAttached) return;
+    if (orientationAttached) return;
     if (typeof DeviceOrientationEvent === 'undefined') return;
 
     if (typeof DeviceOrientationEvent.requestPermission === 'function') {
       try {
-        DeviceOrientationEvent.requestPermission()
-          .then(function (state) {
+        var p = DeviceOrientationEvent.requestPermission();
+        if (p && typeof p.then === 'function') {
+          p.then(function (state) {
             if (state === 'granted') attachOrientation();
-          })
-          .catch(function () {});
-      } catch (err) {
-        /* 非用户手势时调用会抛错，忽略 */
-      }
+          }).catch(function () {});
+        }
+      } catch (err) {}
     } else {
       attachOrientation();
     }
   }
 
-  /* 加载即尝试（Android / 已授权设备会立即生效） */
   requestMotion();
 
-  /* 用户任何一次交互都会静默触发授权（iOS 需要手势） */
   ['pointerdown', 'touchstart', 'mousedown', 'click', 'keydown'].forEach(function (evt) {
     window.addEventListener(evt, requestMotion, { passive: true, capture: true });
   });
 
   function render() {
-    curX += (targetX - curX) * 0.09;
-    curY += (targetY - curY) * 0.09;
+    curX += (targetX - curX) * 0.10;
+    curY += (targetY - curY) * 0.10;
     if (Math.abs(targetX - curX) < 0.0004) curX = targetX;
     if (Math.abs(targetY - curY) < 0.0004) curY = targetY;
 
@@ -274,11 +279,9 @@ body {
     btn.addEventListener('pointerup', release);
     btn.addEventListener('pointerleave', release);
     btn.addEventListener('pointercancel', release);
-
     btn.addEventListener('touchstart', press, { passive: false });
     btn.addEventListener('touchend', release);
     btn.addEventListener('touchcancel', release);
-
     btn.addEventListener('mousedown', press);
     btn.addEventListener('mouseup', release);
     btn.addEventListener('mouseleave', release);
